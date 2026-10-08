@@ -141,6 +141,56 @@
   button:disabled { opacity: .45; cursor: default; }
   button:disabled:hover { background: var(--raise); border-color: var(--line); }
 
+  /* 도움 패널 — 작업하는 동안 옆에 두고 보는 참고 */
+  .help {
+    margin-top: 14px; background: var(--paper-2);
+    border: 1px solid var(--line-soft); border-radius: var(--r); padding: 14px 16px;
+  }
+  .help h4 {
+    font-size: 12.5px; font-weight: 700; color: var(--green); margin: 0 0 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .help h4::before {
+    content: ""; width: 5px; height: 5px; border-radius: 50% 50% 50% 0;
+    background: var(--green); transform: rotate(45deg); flex: none;
+  }
+  .help h4 + h4 { margin-top: 15px; }
+  .help ul { margin: 0; padding-left: 17px; }
+  .help li { font-size: 13.5px; line-height: 1.7; color: var(--ink-soft); margin-bottom: 3px; }
+  .help li::marker { color: var(--grid); }
+  .help .ex { font-family: var(--ser); color: var(--ink); }
+  .help .no { color: var(--ink-mute); text-decoration: line-through; }
+  .help .tip {
+    font-size: 13px; line-height: 1.65; color: var(--ink-soft);
+    margin: 10px 0 0; padding-top: 10px; border-top: 1px solid var(--line-soft);
+  }
+  .help .pair {
+    display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap;
+    font-size: 13.5px; padding: 5px 0;
+  }
+  .help .pair + .pair { border-top: 1px solid var(--line-soft); }
+  .help .pair .ar { color: var(--green); }
+  /* 내 뼈대 — 초고 쓰는 동안 옆에 두고 보는 것 */
+  .mine { margin: 0; padding: 0; list-style: none; }
+  .mine li {
+    display: flex; gap: 9px; align-items: flex-start; padding: 8px 0;
+    font-size: 13.5px; line-height: 1.6;
+  }
+  .mine li + li { border-top: 1px solid var(--line-soft); }
+  .mine input { margin-top: 4px; flex: none; width: 16px; height: 16px; accent-color: var(--green); }
+  .mine .lb { color: var(--green); font-weight: 700; font-size: 12px; display: block; }
+  .mine .tx { color: var(--ink); font-family: var(--ser); }
+  .mine li.on .tx { color: var(--ink-mute); text-decoration: line-through; }
+  .banwords { display: flex; flex-wrap: wrap; gap: 5px; }
+  .banwords span {
+    font-size: 12.5px; color: var(--brick); background: var(--brick-soft);
+    padding: 3px 9px; border-radius: 3px; text-decoration: line-through;
+  }
+  .count-n {
+    font-size: 12.5px; color: var(--ink-mute); text-align: right;
+    margin: 6px 2px 0; font-variant-numeric: tabular-nums;
+  }
+
   .trail { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 11px; }
   .trail span {
     font-size: 11.5px; color: var(--ink-soft); background: var(--paper-2);
@@ -336,6 +386,7 @@
     <div id="pDraft" hidden>
       <label for="draft" class="sr-only">초고 쓰기</label>
       <textarea id="draft" class="big" placeholder="여기서부터는 여러분이 씁니다. 뼈대를 따라가되, 쓰다가 달라져도 괜찮아요."></textarea>
+      <p class="count-n" id="countN">0자</p>
     </div>
 
     <div id="pPolish" hidden>
@@ -362,10 +413,13 @@
       <p class="toast" id="toast"></p>
     </div>
 
+    <aside class="help" id="help" hidden></aside>
+
     <p class="err" id="err" hidden></p>
 
     <div class="btns" id="btns">
       <button class="ghost" id="bDunno" type="button">잘 모르겠어요</button>
+      <button class="ghost" id="bHave" type="button" hidden>쓸 이야기가 이미 있어요</button>
       <button class="ghost" id="bSkip" type="button" hidden>이 물음은 건너뛰기</button>
       <button class="ghost" id="bStuck" type="button" hidden>막혔어요</button>
       <button class="ghost" id="bBack" type="button" hidden>더 고치러 가기</button>
@@ -432,6 +486,74 @@ var API_BASE = "/api";
   var REFLECT = { k: "now", l: "지금의 시선", ask: "지금 돌아보면 그 일이 자신에게 무엇이었는지",
     f: "지금 돌아보면 그 일은 나에게 무엇이었나요? 원치 않으면 건너뛰어도 됩니다." };
 
+  /* 단계마다 옆에 두고 보는 도움글 */
+  var SHOWING = [
+    ["서운했다", "문을 평소보다 조금 세게 닫았다"],
+    ["어색했다", "숟가락으로 국을 계속 저었다"],
+    ["긴장됐다", "주머니 속에서 손을 쥐었다 폈다"],
+    ["기뻤다", "신발끈을 괜히 두 번 고쳐 묶었다"],
+    ["막막했다", "창밖만 한참 봤다"]
+  ];
+  var BANNED = ["그 일을 통해", "깨달았다", "성장할 수 있었다", "소중함을 알게 되었다", "한 뼘 자랐다"];
+
+  function pairs(list) {
+    return list.map(function (x) {
+      return '<div class="pair"><span class="no">' + esc(x[0]) + '</span>' +
+why(x) + "</div>";
+    }).join("");
+  }
+  function why(x) { return '<span class="ar">→</span><span class="ex">' + esc(x[1]) + "</span>"; }
+
+  var HELP = {
+    seedline: function () {
+      return "<h4>이런 식으로 적으면 됩니다</h4><ul>" +
+        '<li class="ex">혼자 있는 게 꼭 나쁜 건 아니라는 것</li>' +
+        '<li class="ex">믿었던 사람도 나를 떠날 수 있다는 것</li>' +
+        '<li class="ex">내가 생각보다 겁이 많다는 것</li></ul>' +
+        '<p class="tip">멋진 교훈을 쓰지 않아도 됩니다. ‘~라는 것’으로 끝내면 자연스럽습니다. 쓰다가 바뀌어도 괜찮아요.</p>';
+    },
+    narrow: function () {
+      return "<h4>한 컷만 남긴다는 건</h4>" +
+        '<div class="pair"><span class="no">작년 내내 그 친구와 멀어졌다</span>' +
+        '<span class="ar">→</span><span class="ex">급식실에서 처음 혼자 앉은 그날 점심</span></div>' +
+        '<p class="tip">경험 전체를 쓰면 줄거리 요약이 됩니다. <b>달라진 것이 처음 눈에 보인 순간</b>을 고르세요.</p>';
+    },
+    cast: function () {
+      return "<h4>바꿔도 되는 것</h4><ul><li>이름, 성별, 학교, 계절, 사는 동네</li></ul>" +
+        "<h4>바꾸면 안 되는 것</h4><ul><li>그때의 감정</li></ul>" +
+        '<p class="tip">이름을 붙이면 내 편만 들지 않게 됩니다. 그래서 상대의 사정도 쓸 수 있게 돼요.</p>';
+    },
+    frame: function () {
+      return "<h4>이렇게 세우면 됩니다</h4><ul>" +
+        '<li><b>들머리</b> <span class="ex">점심마다 교실 뒷문에서 친구를 기다린다</span></li>' +
+        '<li><b>흔들림</b> <span class="ex">그날은 친구가 먼저 “먼저 갈게” 하고 나간다</span></li>' +
+        '<li><b>남는 것</b> <span class="ex">혼자 일어나 국을 다시 떠 온다</span></li></ul>' +
+        '<p class="tip">‘남는 것’에 <b>깨달았다</b>를 쓰지 마세요. 행동 하나면 충분합니다.</p>';
+    },
+    draft: function () {
+      var f = work.frame || { open: "", shake: "", rest: "" };
+      var ck = work.ticks || {};
+      var mine = [["open", "들머리", f.open], ["shake", "흔들림", f.shake], ["rest", "남는 것", f.rest]]
+        .map(function (r) {
+          var on = ck[r[0]] ? " on" : "";
+          return '<li class="' + on.trim() + '"><input type="checkbox" data-tick="' + r[0] + '"' +
+            (ck[r[0]] ? " checked" : "") + ' /><span><span class="lb">' + r[1] + '</span>' +
+            '<span class="tx">' + esc(r[2]) + "</span></span></li>";
+        }).join("");
+      return "<h4>내 뼈대 — 쓴 만큼 눌러 두세요</h4><ul class='mine'>" + mine + "</ul>" +
+        "<h4>감정은 이렇게 바꿉니다</h4>" + pairs(SHOWING) +
+        "<h4>쓰지 않을 말</h4><div class='banwords'>" +
+        BANNED.map(function (w) { return "<span>" + esc(w) + "</span>"; }).join("") + "</div>" +
+        '<p class="tip">한 번에 잘 쓰려 하지 마세요. 들머리부터 한 문단씩 쌓으면 됩니다.</p>';
+    }
+  };
+
+  function drawHelp() {
+    var f = HELP[phase];
+    if (!f) { help.hidden = true; help.innerHTML = ""; return; }
+    help.innerHTML = f(); help.hidden = false;
+  }
+
   var PHASES = [
     { k: "collect", l: "글감 모으기" }, { k: "design", l: "이야기 설계" },
     { k: "write", l: "초고 쓰기" }, { k: "fix", l: "다듬기" }
@@ -445,11 +567,13 @@ var API_BASE = "/api";
   var $ = function (i) { return document.getElementById(i); };
   var rail = $("rail"), badge = $("badge"), dots = $("dots"), trail = $("trail"), carry = $("carry");
   var qEl = $("q"), hint = $("hint"), err = $("err"), foot = $("foot"), modeEl = $("mode");
+  var help = $("help"), countN = $("countN");
   var pAsk = $("pAsk"), pFrame = $("pFrame"), pDraft = $("pDraft"), pPolish = $("pPolish"), pDone = $("pDone");
   var answer = $("answer"), draft = $("draft"), pBody = $("pBody");
   var fo = $("fo"), fs = $("fs"), fr = $("fr");
   var finalEl = $("final"), wasEl = $("was"), nowEl = $("now"), toast = $("toast");
   var bNext = $("bNext"), bDunno = $("bDunno"), bSkip = $("bSkip"), bStuck = $("bStuck");
+  var bHave = $("bHave");
   var bBack = $("bBack"), bCopy = $("bCopy"), bSave = $("bSave"), bPrint = $("bPrint");
   var siftCta = $("siftCta"), bSift = $("bSift");
   var seedsEl = $("seeds"), cntEl = $("cnt"), hLabel = $("hLabel"), harvest = $("harvest");
@@ -481,6 +605,18 @@ var API_BASE = "/api";
     if (aiOk) { modeEl.className = "mode ai"; modeEl.textContent = "AI 함께"; }
     else { modeEl.className = "mode"; modeEl.textContent = "안내 모드"; }
   }
+  /* 화면이 열리자마자 'AI를 쓸 수 있는 상태인가'를 한 번 확인합니다.
+     Claude를 부르지는 않으므로 비용이 들지 않습니다. */
+  function pingAI() {
+    if (!API_BASE) { setMode(); return; }
+    fetch(API_BASE.replace(/\/+$/, "") + "/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kind: "ping" })
+    }).then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { aiOk = !!(d && d.ok); setMode(); })
+      ["catch"](function () { aiOk = false; setMode(); });
+  }
   function ask(kind, payload) {
     if (!API_BASE) return Promise.resolve(null);
     return fetch(API_BASE.replace(/\/+$/, "") + "/ask", {
@@ -491,7 +627,6 @@ var API_BASE = "/api";
       if (!r.ok) throw new Error("bad");
       return r.json();
     }).then(function (d) {
-      aiOk = true; setMode();
       return d && d.text ? String(d.text).trim().replace(/^["“]+|["”]+$/g, "") : null;
     })["catch"](function () { return null; });
   }
@@ -502,7 +637,7 @@ var API_BASE = "/api";
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ kind: kind, payload: payload, json: true })
     }).then(function (r) { if (!r.ok) throw new Error("bad"); return r.json(); })
-      .then(function (d) { aiOk = true; setMode(); return d && d.data ? d.data : null; })
+      .then(function (d) { return d && d.data ? d.data : null; })
       ["catch"](function () { return null; });
   }
   function storyOf(s) {
@@ -556,6 +691,7 @@ var API_BASE = "/api";
   }
   function btns(c) {
     bDunno.hidden = !c.dunno; bSkip.hidden = !c.skip; bStuck.hidden = !c.stuck;
+    bHave.hidden = !c.have;
     bBack.hidden = !c.back; bCopy.hidden = !c.hand; bSave.hidden = !c.hand; bPrint.hidden = !c.hand;
     bNext.hidden = !!c.noNext; bNext.textContent = c.next || "다음";
   }
@@ -565,17 +701,17 @@ var API_BASE = "/api";
   function gather() {
     phase = "gather"; beat = 0; cur = null;
     badge.className = "badge"; badge.textContent = "함께 찾아볼까요";
-    panel("ask"); btns({ dunno: true, next: "이 이야기로" });
+    panel("ask"); btns({ dunno: true, have: seeds.length === 0, next: "이 이야기로" });
     answer.value = ""; answer.placeholder = "떠오르는 대로 편하게 적어 보세요. 짧아도 괜찮아요.";
     hideErr(); setHint(null); drawTrail(); drawDots(0); drawCarry(); drawRail();
-    setQ(OPENERS[openIdx].q, false);
+    setQ(OPENERS[openIdx].q, false); drawHelp();
     foot.textContent = "답한 내용은 이 기기에만 저장됩니다. 창을 닫아도 이어서 쓸 수 있습니다.";
     focus(answer); save();
   }
   function deepen() {
     phase = "deepen"; beat = 0;
     badge.className = "badge"; badge.textContent = "조금 더 깊이";
-    btns({ next: "다음" }); drawTrail(); drawRail(); beatQ();
+    btns({ next: "다음" }); drawTrail(); drawRail(); drawHelp(); beatQ();
   }
   function beatQ() {
     var b = BEATS[beat];
@@ -588,7 +724,7 @@ var API_BASE = "/api";
   function reflect() {
     phase = "reflect";
     badge.className = "badge blue"; badge.textContent = "지금의 나로 돌아와";
-    btns({ skip: true, next: "다음" }); drawDots(3); drawRail(); drawTrail();
+    btns({ skip: true, next: "다음" }); drawDots(3); drawRail(); drawTrail(); drawHelp();
     answer.value = ""; hideErr(); setQ("", true); lock(true);
     ask("deepen", { story: cur, beat: REFLECT.ask }).then(function (q) {
       setQ(q || REFLECT.f, false); lock(false); focus(answer); save();
@@ -599,7 +735,10 @@ var API_BASE = "/api";
     seeds.push({ title: cur.opener, parts: cur.parts.slice() });
     drawSeeds(); cntEl.hidden = false; cntEl.textContent = seeds.length;
     hLabel.textContent = "지금까지 모은 이야기";
-    if (seeds.length >= 3) siftCta.hidden = false;
+    siftCta.hidden = false;
+    bSift.textContent = seeds.length === 1
+      ? "이 이야기로 쓸게요"
+      : "충분히 모았어요 · 이제 글감을 골라볼게요";
     save();
   }
   function nextStory() {
@@ -627,11 +766,12 @@ var API_BASE = "/api";
 
   /* ── 솎아내기 ── */
   function sift() {
+    if (seeds.length === 1) { work.seed = seeds[0]; return seedline(); }
     phase = "sift"; siftCta.hidden = true;
     panel("none"); btns({ noNext: true });
     badge.className = "badge"; badge.textContent = "글감 솎아내기";
     setQ("모은 이야기 중에서 소설로 키울 하나를 골라 보세요.", false);
-    setHint(null); drawCarry(); drawRail(); hLabel.textContent = "";
+    setHint(null); drawCarry(); drawRail(); drawHelp(); hLabel.textContent = "";
     if (!$("sIntro")) {
       var p = document.createElement("p");
       p.className = "sintro"; p.id = "sIntro";
@@ -676,7 +816,7 @@ var API_BASE = "/api";
     answer.value = ""; answer.placeholder = "예: 혼자 있는 게 꼭 나쁜 건 아니라는 것";
     hideErr(); drawCarry(); drawRail(); drawDots(0);
     foot.textContent = "여기서부터는 이야기를 설계합니다.";
-    focus(answer); save();
+    drawHelp(); focus(answer); save();
   }
   function narrow() {
     phase = "narrow";
@@ -685,7 +825,7 @@ var API_BASE = "/api";
     setHint("경험 전체를 쓰면 줄거리 요약이 됩니다. 영화로 치면 한 컷만 남기는 일입니다.");
     answer.value = ""; answer.placeholder = "예: 급식실에서 처음 혼자 앉은 그날 점심";
     hideErr(); drawCarry(); drawRail();
-    setQ("", true); lock(true);
+    drawHelp(); setQ("", true); lock(true);
     ask("narrow", { story: storyOf(work.seed), seedline: work.seedline }).then(function (q) {
       setQ(q || "그 일을 영화로 찍는다면, 딱 한 장면만 남긴다면 어느 순간을 남기겠어요?", false);
       lock(false); focus(answer); save();
@@ -698,7 +838,7 @@ var API_BASE = "/api";
     setQ("이 장면의 주인공에게 이름을 붙여준다면 뭐라고 하겠어요?", false);
     setHint("이름을 붙이면 '내 일'이 '이야기'가 됩니다. 성별이나 학교, 계절도 바꿔도 됩니다. 다만 그때의 감정만은 진짜여야 글이 살아납니다.");
     answer.value = ""; answer.placeholder = "예: 서현";
-    hideErr(); drawCarry(); drawRail(); focus(answer); save();
+    hideErr(); drawCarry(); drawRail(); drawHelp(); focus(answer); save();
   }
   function frame() {
     phase = "frame";
@@ -706,7 +846,7 @@ var API_BASE = "/api";
     panel("frame"); btns({ next: "뼈대 다 세웠어요" });
     setQ("장면을 세 칸으로 잘라 봅니다.", false);
     setHint("어디서 시작해 어디서 끊을지가 곧 구성입니다. 각 칸은 한 줄이면 충분합니다.");
-    hideErr(); drawCarry(); drawRail(); focus(fo); save();
+    hideErr(); drawCarry(); drawRail(); drawHelp(); focus(fo); save();
   }
 
   /* ── 초고 ── */
@@ -718,7 +858,7 @@ var API_BASE = "/api";
     setHint("감정을 직접 말하는 대신 행동과 사물로 보여주면 글이 살아납니다. 막히면 아래 '막혔어요'를 누르세요. 문장을 대신 써 주지는 않고, 질문을 하나 드립니다.");
     hideErr(); drawCarry(); drawRail();
     foot.textContent = "여기서부터 끝까지, 문장은 전부 여러분이 씁니다.";
-    focus(draft); save();
+    drawHelp(); tickCount(); focus(draft); save();
   }
   var STUCK_Q = [
     "그 순간, 눈앞에 가장 먼저 들어온 것은 무엇이었나요?",
@@ -744,7 +884,7 @@ var API_BASE = "/api";
     phase = "polish";
     badge.className = "badge blue"; badge.textContent = "다듬기";
     panel("polish"); btns({ back: true, next: "다 됐어요" });
-    setHint(null); drawCarry(); drawRail();
+    setHint(null); drawCarry(); drawRail(); drawHelp();
     foot.textContent = "고치는 사람은 여러분입니다. 여기서는 어디를 볼지만 알려 드립니다.";
     pBody.innerHTML = ""; lock(true); save();
 
@@ -762,7 +902,17 @@ var API_BASE = "/api";
     setQ("", true);
     askData("polish", { draft: draft.value.slice(0, 4000) }).then(function (d) {
       lock(false);
-      if (!d) { setQ("지금은 읽어 드리지 못했어요. 아래 예시를 보고 스스로 살펴보세요.", false); return; }
+      if (!d) {
+        setQ("지금은 읽어 드리지 못했어요. 스스로 점검해 보세요.", false);
+        pBody.innerHTML = '<ul class="selfcheck">' +
+        chk("감정을 직접 말한 문장이 있나요? 그 자리에 그때의 행동을 넣어 보세요.") +
+        chk("마지막 문장이 '깨달았다', '성장했다'로 끝나나요? 행동 하나로 바꿔 보세요.") +
+        chk("들머리에 평소의 리듬이 보이나요? 그게 있어야 뒤의 어긋남이 눈에 띕니다.") +
+        chk("설명으로 때운 자리가 있나요? 한 군데만 장면으로 바꿔 보세요.") +
+        chk("소리 내어 한 번 읽어 보세요. 걸리는 곳이 고칠 곳입니다.") +
+        "</ul>";
+        return;
+      }
       setQ("읽었습니다. 고치는 건 여러분이 하세요.", false);
       var h = "";
       if (d.keep && d.keep.quote) {
@@ -775,7 +925,13 @@ var API_BASE = "/api";
              esc(String(n.ask || "")) + "</p></div>";
       });
       if (d.ending) h += '<div class="pn"><p class="a">마지막 문장</p><p class="b">' + esc(String(d.ending)) + "</p></div>";
-      pBody.innerHTML = h || '<div class="pn"><p class="b">특별히 고칠 곳이 보이지 않습니다. 소리 내어 한 번 읽어 보세요.</p></div>';
+      pBody.innerHTML = h || ('<div class="pn"><p class="b">특별히 고칠 곳이 보이지 않습니다. 아래도 한 번 살펴보세요.</p></div>' + '<ul class="selfcheck">' +
+        chk("감정을 직접 말한 문장이 있나요? 그 자리에 그때의 행동을 넣어 보세요.") +
+        chk("마지막 문장이 '깨달았다', '성장했다'로 끝나나요? 행동 하나로 바꿔 보세요.") +
+        chk("들머리에 평소의 리듬이 보이나요? 그게 있어야 뒤의 어긋남이 눈에 띕니다.") +
+        chk("설명으로 때운 자리가 있나요? 한 군데만 장면으로 바꿔 보세요.") +
+        chk("소리 내어 한 번 읽어 보세요. 걸리는 곳이 고칠 곳입니다.") +
+        "</ul>");
     });
   }
   function chk(t) { return '<li><input type="checkbox" /><span>' + t + "</span></li>"; }
@@ -786,7 +942,7 @@ var API_BASE = "/api";
     badge.className = "badge"; badge.textContent = "완성";
     panel("done"); btns({ hand: true, noNext: true });
     setQ("한 편을 끝까지 썼습니다.", false); setHint(null);
-    drawCarry(); drawRail(); harvest.hidden = true; siftCta.hidden = true;
+    drawCarry(); drawRail(); drawHelp(); harvest.hidden = true; siftCta.hidden = true;
     foot.textContent = "이 글의 모든 문장은 여러분이 썼습니다.";
     finalEl.innerHTML = "<h3>" + esc(title()) + "</h3>" + esc(work.draft);
     wasEl.textContent = work.seedline || "(적지 않음)";
@@ -864,6 +1020,12 @@ var API_BASE = "/api";
   /* ── 이벤트 ── */
   bNext.addEventListener("click", submit);
   bDunno.addEventListener("click", function () { if (!bDunno.disabled) dunno(); });
+  bHave.addEventListener("click", function () {
+    setQ("쓰고 싶은 이야기를 한 줄로 적어 보세요.", false);
+    setHint("예: 작년에 친했던 친구와 멀어진 일 / 처음으로 혼자 버스를 타고 간 날");
+    answer.value = ""; answer.placeholder = "어떤 일이었는지 한 줄이면 됩니다.";
+    bHave.hidden = true; bDunno.hidden = true; hideErr(); focus(answer);
+  });
   bSkip.addEventListener("click", function () { if (!bSkip.disabled) { commit(); nextStory(); } });
   bStuck.addEventListener("click", function () { if (!bStuck.disabled) stuck(); });
   bBack.addEventListener("click", function () { toDraft(); });
@@ -888,7 +1050,21 @@ var API_BASE = "/api";
   });
 
   answer.addEventListener("input", hideErr);
-  draft.addEventListener("input", function () { hideErr(); work.draft = draft.value; save(); });
+  draft.addEventListener("input", function () {
+    hideErr(); work.draft = draft.value; tickCount(); save();
+  });
+  function tickCount() {
+    var n = draft.value.replace(/\s/g, "").length;
+    countN.textContent = n + "자" + (n < 150 ? "" : n < 400 ? "  ·  한 장면이 되어 갑니다" : "  ·  충분합니다");
+  }
+  help.addEventListener("change", function (e) {
+    var t = e.target && e.target.getAttribute ? e.target.getAttribute("data-tick") : null;
+    if (!t) return;
+    work.ticks = work.ticks || {};
+    work.ticks[t] = e.target.checked;
+    var li = e.target.closest("li"); if (li) li.classList.toggle("on", e.target.checked);
+    save();
+  });
   [fo, fs, fr].forEach(function (el) { el.addEventListener("input", hideErr); });
   nowEl.addEventListener("input", function () { work.now = nowEl.value; save(); });
   answer.addEventListener("keydown", function (e) {
@@ -918,7 +1094,9 @@ var API_BASE = "/api";
     if (seeds.length) {
       drawSeeds(); cntEl.hidden = false; cntEl.textContent = seeds.length;
       hLabel.textContent = "지금까지 모은 이야기";
-      if (seeds.length >= 3) siftCta.hidden = false;
+      siftCta.hidden = false;
+      bSift.textContent = seeds.length === 1
+        ? "이 이야기로 쓸게요" : "충분히 모았어요 · 이제 글감을 골라볼게요";
     } else drawEx();
     if (work.frame) { fo.value = work.frame.open; fs.value = work.frame.shake; fr.value = work.frame.rest; }
     if (work.draft) draft.value = work.draft;
@@ -966,7 +1144,7 @@ var API_BASE = "/api";
         resume.hidden = false;
       }
     }
-    drawEx(); setMode(); gather();
+    drawEx(); setMode(); pingAI(); gather();
   }
   boot(false);
 })();

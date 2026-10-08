@@ -94,16 +94,18 @@ function buildPrompt(kind, p) {
   }
   if (kind === "polish") {
     return (
-      `${TONE}\n\n학생이 쓴 초고입니다.\n\n${p.draft || ""}\n\n${NEVER_WRITE}\n` +
-      "이 글을 읽고 다음을 JSON으로만 답하세요.\n" +
-      "- keep: 가장 잘 쓴 문장 하나를 글에서 그대로 인용(quote)하고, 왜 좋은지 한 문장(why).\n" +
-      "- notes: 고치면 좋아질 자리 최대 3개. 각각 학생 글에서 그대로 인용한 quote와, " +
-      "학생이 스스로 고칠 수 있게 돕는 질문 ask. 특히 감정을 직접 말한 문장('서운했다' 같은)과 " +
-      "설명으로 때운 문장을 찾으세요. ask에 고쳐 쓴 문장을 넣으면 안 됩니다.\n" +
-      "- ending: 마지막 문장에 대한 한 문장 평. '깨달았다', '성장했다', '그 일을 통해' 같은 " +
-      "선언으로 끝났다면 그 점을 알려주고 행동이나 사물로 끝내도록 권하세요. 아니면 잘된 점을 말하세요.\n" +
-      "quote는 반드시 학생 글에 있는 그대로여야 합니다.\n" +
-      '오직 JSON만: {"keep":{"quote":"...","why":"..."},"notes":[{"quote":"...","ask":"..."}],"ending":"..."}'
+      `${TONE}\n\n학생이 쓴 초고입니다.\n\n${p.draft || ""}\n\n${NEVER_WRITE}\n\n` +
+      "이 글을 읽고 아래 형식으로만 답하세요. 한 줄에 하나씩, 구분자는 ||| 입니다.\n" +
+      "설명이나 인사말은 쓰지 마세요. 바로 첫 줄부터 시작하세요.\n\n" +
+      "KEEP|||글에서 그대로 옮긴 가장 잘 쓴 문장|||왜 좋은지 한 문장\n" +
+      "NOTE|||글에서 그대로 옮긴 고칠 문장|||학생이 스스로 고치게 돕는 질문\n" +
+      "NOTE|||(최대 3줄까지)|||...\n" +
+      "END|||마지막 문장에 대한 한 문장 평\n\n" +
+      "NOTE 는 특히 감정을 직접 말한 문장('서운했다' 같은)과 설명으로 때운 문장을 찾으세요. " +
+      "질문 자리에 고쳐 쓴 문장을 넣으면 안 됩니다. 질문만 적으세요.\n" +
+      "END 는 마지막 문장이 '깨달았다', '성장했다', '그 일을 통해' 같은 선언으로 끝났다면 " +
+      "그 점을 알려주고 행동이나 사물로 끝내도록 권하세요. 아니면 잘된 점을 말하세요.\n" +
+      "KEEP 과 NOTE 의 인용은 반드시 학생 글에 있는 그대로여야 합니다."
     );
   }
   if (kind === "sift") {
@@ -112,17 +114,60 @@ function buildPrompt(kind, p) {
       `${TONE}\n\n학생이 모은 글감(씨앗)들입니다. 자전적 소설감으로서 세 잣대로 살펴봐 주세요. ` +
       "좋은 글감은 특별한 사건이 아니라 '그 학생만 할 수 있는 이야기'이고, " +
       "그 일을 겪기 전과 후의 내가 달라져 있는 이야기입니다.\n" +
-      "세 잣대(각 1~3점): unique 고유함(누가 겪어도 똑같으면 1, 그 관계·상황이 그만의 것이면 3) / " +
-      "change 변화(전과 후가 거의 같으면 1, 달라진 것이 뚜렷하면 3) / " +
-      "inner 속마음(겉사건만 있으면 1, 남모를 감정이 깔려 있으면 3).\n" +
-      "약한 씨앗도 버리지 말고, '여기를 이렇게 파면 특별해진다'고 길을 내주는 따뜻한 한 문장 note를 다세요. " +
-      "note에 '성장했다', '배웠다' 같은 상투적인 말은 쓰지 마세요.\n\n" +
+      "세 잣대는 각각 1점에서 3점입니다.\n" +
+      "고유함: 누가 겪어도 똑같으면 1, 그 관계나 상황이 그 사람만의 것이면 3\n" +
+      "변화: 전과 후가 거의 같으면 1, 달라진 것이 뚜렷하면 3\n" +
+      "속마음: 겉사건만 있으면 1, 남모를 감정이 깔려 있으면 3\n\n" +
       `[씨앗]\n${list}\n\n` +
-      "순서대로, 씨앗마다 하나씩. 오직 JSON 배열만 출력:\n" +
-      '[{"scores":{"unique":2,"change":3,"inner":3},"note":"..."}]'
+      "아래 형식으로만 답하세요. 씨앗 하나당 한 줄, 번호 순서대로, 구분자는 ||| 입니다.\n" +
+      "설명이나 인사말은 쓰지 마세요. 바로 첫 줄부터 시작하세요.\n\n" +
+      "번호|||고유함점수|||변화점수|||속마음점수|||한 문장 조언\n\n" +
+      "예시 — 0|||3|||2|||3|||겉으로는 작은 일이지만 그 거리감은 본인만 아는 감정입니다.\n\n" +
+      "조언은 약한 씨앗도 버리지 말고 '여기를 이렇게 파면 특별해진다'고 길을 내주세요. " +
+      "'성장했다', '배웠다' 같은 상투적인 말은 쓰지 마세요."
     );
   }
   return null;
+}
+
+/* 줄 단위 형식을 읽습니다. 답이 중간에 잘려도 거기까지는 살아남습니다. */
+const SEP = "|||";
+function parseLines(kind, text) {
+  const lines = String(text || "").split("\n").map((l) => l.trim()).filter(Boolean);
+
+  if (kind === "polish") {
+    const out = { keep: null, notes: [], ending: "" };
+    for (const line of lines) {
+      const f = line.split(SEP).map((x) => x.trim());
+      if (f.length < 2) continue;
+      const tag = f[0].toUpperCase().replace(/[^A-Z]/g, "");
+      if (tag === "KEEP" && f[1]) out.keep = { quote: f[1], why: f[2] || "" };
+      else if (tag === "NOTE" && f[1] && out.notes.length < 3) out.notes.push({ quote: f[1], ask: f[2] || "" });
+      else if (tag === "END" && f[1]) out.ending = f[1];
+    }
+    return (out.keep || out.notes.length || out.ending) ? out : null;
+  }
+
+  if (kind === "sift") {
+    const rows = [];
+    for (const line of lines) {
+      const f = line.split(SEP).map((x) => x.trim());
+      if (f.length < 5) continue;
+      const i = parseInt(f[0].replace(/[^0-9]/g, ""), 10);
+      if (!isFinite(i)) continue;
+      rows[i] = {
+        scores: { unique: clamp(f[1]), change: clamp(f[2]), inner: clamp(f[3]) },
+        note: f[4] || ""
+      };
+    }
+    const filled = rows.filter(Boolean).length;
+    return filled ? rows : null;
+  }
+  return null;
+}
+function clamp(v) {
+  const n = Math.round(Number(String(v).replace(/[^0-9]/g, "")));
+  return isFinite(n) ? Math.max(1, Math.min(3, n)) : 2;
 }
 
 function parseJson(text) {
@@ -144,11 +189,19 @@ module.exports = async function handler(req, res) {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return res.status(503).json({});          // 안내 모드로 수업은 계속됩니다
 
+  let body;
+  try {
+    body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
+  } catch (e) { body = {}; }
+
+  // 화면이 열릴 때 'AI를 쓸 수 있는 상태인가'만 묻는 신호.
+  // Claude를 부르지 않으므로 비용이 들지 않습니다.
+  if (body.kind === "ping") return res.status(200).json({ ok: true, model: MODEL });
+
   const ip = String(req.headers["x-forwarded-for"] || "unknown").split(",")[0].trim();
   if (!allowed(ip)) return res.status(429).json({});
 
   try {
-    const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
     const prompt = buildPrompt(body.kind, body.payload);
     if (!prompt) return res.status(400).json({});
 
@@ -161,7 +214,8 @@ module.exports = async function handler(req, res) {
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: body.json ? 1200 : 200,
+        // 한국어는 토큰을 많이 먹습니다. 답이 잘려 형식이 깨지지 않도록 넉넉히 둡니다.
+        max_tokens: body.json ? 2000 : 400,
         messages: [{ role: "user", content: prompt }]
       })
     });
@@ -171,7 +225,11 @@ module.exports = async function handler(req, res) {
     const text = (data.content || [])
       .filter((b) => b.type === "text").map((b) => b.text).join("").trim();
 
-    return res.status(200).json(body.json ? { data: parseJson(text) } : { text });
+    if (!body.json) return res.status(200).json({ text });
+
+    // 줄 단위로 먼저 읽고, 혹시 JSON 으로 왔으면 그것도 받아 줍니다.
+    const parsed = parseLines(body.kind, text) || parseJson(text);
+    return res.status(200).json({ data: parsed, raw: parsed ? undefined : text.slice(0, 500) });
   } catch (e) {
     console.error("[ask 실패]", e.message);
     // 실패해도 학생 화면은 안내 모드로 이어집니다.

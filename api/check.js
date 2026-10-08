@@ -54,6 +54,38 @@ module.exports = async function handler(req, res) {
   rows.push(["서버", "작동 중 (이 화면이 보이면 파일 구조는 맞습니다)", "good"]);
   rows.push(["쓰는 모델", MODEL]);
 
+  // 학생 화면이 서버를 부르도록 설정되어 있는지 확인합니다.
+  let pageBad = false;
+  try {
+    const host = req.headers["x-forwarded-host"] || req.headers.host;
+    const html = await fetch("https://" + host + "/", { cache: "no-store" }).then(r => r.text());
+    const m = html.match(/var\s+API_BASE\s*=\s*"([^"]*)"/);
+    if (!m) {
+      rows.push(["학생 화면", "확인 불가 (index.html 을 읽지 못했습니다)"]);
+    } else if (m[1] === "") {
+      pageBad = true;
+      rows.push(["학생 화면", 'API_BASE 가 비어 있음 — 옛날 파일이 올라갔습니다', "bad"]);
+    } else {
+      rows.push(["학생 화면", 'API_BASE = "' + m[1] + '" (정상)', "good"]);
+    }
+    rows.push(["화면 열 때 확인", /kind: "ping"/.test(html) ? "있음 (최신 파일)" : "없음 — 옛날 파일입니다",
+      /kind: "ping"/.test(html) ? "good" : "bad"]);
+    if (!/kind: "ping"/.test(html)) pageBad = true;
+  } catch (e) {
+    rows.push(["학생 화면", "확인 불가: " + e.message]);
+  }
+
+  if (pageBad) {
+    return res.status(200).send(page(rows,
+      { ok: false, msg: "서버는 괜찮지만 학생 화면이 옛날 파일입니다." },
+      [
+        "받으신 최신 묶음에서 <code>public/index.html</code> 을 GitHub의 같은 경로에 다시 올리세요.",
+        "GitHub에서 <code>public/index.html</code> 을 열고 <b>연필 아이콘</b>으로 수정하거나, <b>Add file → Upload files</b> 로 같은 경로에 덮어쓰면 됩니다.",
+        "Vercel이 1~2분 뒤 자동으로 다시 배포합니다.",
+        "그 뒤 이 화면을 새로고침해 보세요."
+      ]));
+  }
+
   if (!key) {
     rows.push(["API 키", "없음", "bad"]);
     return res.status(200).send(page(rows,
@@ -101,10 +133,43 @@ module.exports = async function handler(req, res) {
       say = (d.content || []).filter(b => b.type === "text").map(b => b.text).join("").trim();
     } catch (e) {}
     rows.push(["Claude가 한 말", say || "(비어 있음)", "good"]);
+
+    // 점수 매기기와 수정 제안이 실제로 되는지 시험합니다.
+    const host2 = req.headers["x-forwarded-host"] || req.headers.host;
+    const probe = async (kind, payload) => {
+      try {
+        const rr = await fetch("https://" + host2 + "/api/ask", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ kind, payload, json: true })
+        });
+        const dd = await rr.json();
+        return dd && dd.data ? { ok: true } : { ok: false, raw: (dd && dd.raw) || "(빈 응답)" };
+      } catch (e) { return { ok: false, raw: e.message }; }
+    };
+
+    const SAMPLE = "점심 종이 울리면 나는 늘 교실 뒷문에서 지원을 기다렸다. " +
+      "그날은 지원이 먼저 일어섰다. 나는 몹시 서운했다. " +
+      "급식실 끝자리에 혼자 앉아 국을 저었다. 그 일을 통해 나는 한층 성장할 수 있었다.";
+
+    const [sift, polish] = await Promise.all([
+      probe("sift", { seeds: ["친구와 멀어진 일 — 그때 그 장면: 급식실 / 달라진 것: 혼자가 편해졌다"] }),
+      probe("polish", { draft: SAMPLE })
+    ]);
+
+    rows.push(["글감 점수 매기기", sift.ok ? "작동함" : "실패 — " + sift.raw, sift.ok ? "good" : "bad"]);
+    rows.push(["다듬기 제안", polish.ok ? "작동함" : "실패 — " + polish.raw, polish.ok ? "good" : "bad"]);
+
+    if (sift.ok && polish.ok) {
+      return res.status(200).send(page(rows,
+        { ok: true, msg: "모두 정상입니다. 점수 매기기와 다듬기 제안까지 확인했습니다." },
+        ["학생 화면을 새로고침한 뒤 오른쪽 위에 'AI 함께'가 떠 있는지 보세요.",
+         "그래도 '안내 모드'면 새로고침을 한 번 더 하거나 다른 브라우저로 열어 보세요."]));
+    }
     return res.status(200).send(page(rows,
-      { ok: true, msg: "모두 정상입니다. 학생 화면에 'AI 함께'로 떠야 합니다." },
-      ["학생 화면을 새로고침한 뒤 오른쪽 위 표시를 확인하세요.",
-       "그래도 '안내 모드'면 브라우저 캐시 때문일 수 있습니다. 새로고침을 한 번 더 하거나 다른 브라우저로 열어 보세요."]));
+      { ok: false, msg: "기본 연결은 되는데, 일부 기능이 응답을 제대로 못 받았습니다." },
+      ["위의 '실패' 줄에 적힌 내용을 캡처해 알려 주세요.",
+       "수업은 그대로 하실 수 있습니다. 그 기능만 스스로 점검하는 목록으로 바뀝니다."]));
   }
 
   // 오류 해석
