@@ -6,11 +6,11 @@
  *
  * 환경 변수
  *   ANTHROPIC_API_KEY  (필수) 없으면 전체가 '안내 모드'로 작동합니다
- *   MODEL              (선택) 기본값 claude-haiku-4-5-20251001
+ *   MODEL              (선택) 기본값 claude-haiku-5-5
  *   RATE_MAX           (선택) 한 기기가 한 시간에 부를 수 있는 최대 횟수, 기본 80
  */
 
-const MODEL = process.env.MODEL || "claude-haiku-4-5-20251001";
+const MODEL = process.env.MODEL || "claude-haiku-5-5";
 const RATE_MAX = Number(process.env.RATE_MAX || 80);
 
 /* 같은 기기가 지나치게 많이 부르는 것을 막습니다.
@@ -174,6 +174,8 @@ module.exports = async function handler(req, res) {
     return res.status(200).json(body.json ? { data: parseJson(text) } : { text });
   } catch (e) {
     console.error("[ask 실패]", e.message);
-    return res.status(200).json({});   // 실패해도 학생 화면은 안내 모드로 이어집니다
+    // 실패해도 학생 화면은 안내 모드로 이어집니다.
+    // 무엇이 문제인지는 /api/check 를 열어 보시면 한국어로 알려 줍니다.
+    return res.status(200).json({ error: e.message });
   }
 };
