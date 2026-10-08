@@ -1,0 +1,7 @@
+{
+  "name": "geulgam",
+  "version": "1.0.0",
+  "private": true,
+  "description": "글감 찾기 — 자전적 소설 쓰기 수업 도구",
+  "engines": { "node": ">=18" }
+}
