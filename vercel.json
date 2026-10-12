@@ -1,5 +1,19 @@
 {
   "functions": {
     "api/ask.js": { "maxDuration": 30 }
-  }
+  },
+  "headers": [
+    {
+      "source": "/(.*).html",
+      "headers": [
+        { "key": "cache-control", "value": "no-store, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/",
+      "headers": [
+        { "key": "cache-control", "value": "no-store, must-revalidate" }
+      ]
+    }
+  ]
 }

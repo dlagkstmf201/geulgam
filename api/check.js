@@ -7,6 +7,7 @@
  */
 
 const MODEL = process.env.MODEL || "claude-haiku-5-5";
+const MODEL_JUDGE = process.env.MODEL_JUDGE || MODEL;
 
 function page(rows, verdict, next) {
   const body = rows.map(r =>
@@ -53,6 +54,7 @@ module.exports = async function handler(req, res) {
 
   rows.push(["서버", "작동 중 (이 화면이 보이면 파일 구조는 맞습니다)", "good"]);
   rows.push(["쓰는 모델", MODEL]);
+  rows.push(["다듬기·점수 모델", MODEL_JUDGE + (MODEL_JUDGE === MODEL ? " (같음)" : "")]);
 
   // 학생 화면이 서버를 부르도록 설정되어 있는지 확인합니다.
   let pageBad = false;
@@ -71,6 +73,11 @@ module.exports = async function handler(req, res) {
     rows.push(["화면 열 때 확인", /kind: "ping"/.test(html) ? "있음 (최신 파일)" : "없음 — 옛날 파일입니다",
       /kind: "ping"/.test(html) ? "good" : "bad"]);
     if (!/kind: "ping"/.test(html)) pageBad = true;
+
+    const bm = html.match(/var\s+BUILD\s*=\s*"([^"]*)"/);
+    rows.push(["올라간 판", bm ? bm[1] + "판" : "2판 이하 (제목 칸이 없는 옛날 파일)", bm ? "good" : "bad"]);
+    rows.push(["제목 칸", /id="headline"/.test(html) ? "있음" : "없음", /id="headline"/.test(html) ? "good" : "bad"]);
+    rows.push(["여러 장 나누기", /function sendPages/.test(html) ? "있음" : "없음", /function sendPages/.test(html) ? "good" : "bad"]);
   } catch (e) {
     rows.push(["학생 화면", "확인 불가: " + e.message]);
   }
@@ -112,7 +119,9 @@ module.exports = async function handler(req, res) {
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 16,
+        max_tokens: 2000,
+        thinking: { type: "disabled" },
+        output_config: { effort: "low" },
         messages: [{ role: "user", content: "안녕하세요라고만 답하세요." }]
       })
     });
@@ -127,12 +136,16 @@ module.exports = async function handler(req, res) {
   rows.push(["Claude 응답 코드", String(r.status), r.ok ? "good" : "bad"]);
 
   if (r.ok) {
-    let say = "";
+    let say = "", stop = "";
     try {
       const d = JSON.parse(raw);
       say = (d.content || []).filter(b => b.type === "text").map(b => b.text).join("").trim();
+      stop = d.stop_reason || "";
     } catch (e) {}
     rows.push(["Claude가 한 말", say || "(비어 있음)", "good"]);
+    if (stop === "max_tokens") {
+      rows.push(["주의", "답이 길이 한도에서 잘렸습니다. 생각 끄기 설정이 적용되지 않았을 수 있습니다.", "bad"]);
+    }
 
     // 점수 매기기와 수정 제안이 실제로 되는지 시험합니다.
     const host2 = req.headers["x-forwarded-host"] || req.headers.host;

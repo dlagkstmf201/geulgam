@@ -11,6 +11,18 @@
  */
 
 const MODEL = process.env.MODEL || "claude-haiku-5-5";
+
+/*
+ * 다듬기와 글감 점수 매기기에만 쓸 모델.
+ * 비워 두면 위와 같은 모델을 씁니다.
+ *
+ * 이 둘은 '가장 잘 쓴 문장 고르기', '고칠 자리 짚기'처럼 판단이 필요한 일이라
+ * 더 큰 모델을 쓰면 지적이 날카로워집니다. 호출은 학생당 두 번뿐이라
+ * claude-sonnet-5-5 로 올려도 한 반에 몇백 원 수준입니다.
+ *
+ * Vercel 환경 변수에 MODEL_JUDGE = claude-sonnet-5-5 를 넣으면 적용됩니다.
+ */
+const MODEL_JUDGE = process.env.MODEL_JUDGE || MODEL;
 const RATE_MAX = Number(process.env.RATE_MAX || 80);
 
 /* 같은 기기가 지나치게 많이 부르는 것을 막습니다.
@@ -176,6 +188,52 @@ function clamp(v) {
   return isFinite(n) ? Math.max(1, Math.min(3, n)) : 2;
 }
 
+/*
+ * Claude 호출.
+ *
+ * 최신 모델은 답하기 전에 속으로 생각을 하는데, 그 생각이 max_tokens 를 함께 씁니다.
+ * 한도가 빠듯하면 생각이 다 먹고 보이는 글자가 몇 자만 남아 잘립니다.
+ * 우리가 시키는 일(질문 한 줄 만들기, 짧은 지적 세 개)은 깊이 생각할 거리가 아니므로
+ * 생각을 끄고 한도를 넉넉히 둡니다. 답도 훨씬 빨리 옵니다.
+ *
+ * 혹시 이 계정에서 그 설정을 받지 않으면(400), 설정 없이 한 번 더 시도합니다.
+ */
+async function callClaude(key, prompt, wantStructured) {
+  const maxTokens = wantStructured ? 8000 : 2000;
+  const base = {
+    model: wantStructured ? MODEL_JUDGE : MODEL,
+    max_tokens: maxTokens,
+    messages: [{ role: "user", content: prompt }]
+  };
+  const tuned = Object.assign({}, base, {
+    thinking: { type: "disabled" },
+    output_config: { effort: wantStructured ? "medium" : "low" }
+  });
+
+  const send = (payload) =>
+    fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01"
+      },
+      body: JSON.stringify(payload)
+    });
+
+  let r = await send(tuned);
+  if (r.status === 400) {
+    console.warn("[알림] 생각 끄기 설정을 받지 않아 기본 설정으로 다시 보냅니다.");
+    r = await send(base);
+  }
+  if (!r.ok) throw new Error("anthropic " + r.status + " " + (await r.text()).slice(0, 200));
+
+  const data = await r.json();
+  const text = (data.content || [])
+    .filter((b) => b.type === "text").map((b) => b.text).join("").trim();
+  return { text, stop: data.stop_reason };
+}
+
 function parseJson(text) {
   try { return JSON.parse(text); } catch (e) {}
   const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/);
@@ -211,25 +269,8 @@ module.exports = async function handler(req, res) {
     const prompt = buildPrompt(body.kind, body.payload);
     if (!prompt) return res.status(400).json({});
 
-    const r = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": key,
-        "anthropic-version": "2023-06-01"
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        // 한국어는 토큰을 많이 먹습니다. 답이 잘려 형식이 깨지지 않도록 넉넉히 둡니다.
-        max_tokens: body.json ? 2000 : 400,
-        messages: [{ role: "user", content: prompt }]
-      })
-    });
-    if (!r.ok) throw new Error("anthropic " + r.status);
-
-    const data = await r.json();
-    const text = (data.content || [])
-      .filter((b) => b.type === "text").map((b) => b.text).join("").trim();
+    const { text, stop } = await callClaude(key, prompt, !!body.json);
+    if (stop === "max_tokens") console.warn("[주의] 답이 길이 한도에서 잘렸습니다.");
 
     if (!body.json) return res.status(200).json({ text });
 

@@ -204,6 +204,17 @@
   }
   .big3 span { display: block; font-size: 13px; color: var(--ink-mute); line-height: 1.5; }
 
+  .titlebox {
+    background: var(--green-soft); border-radius: var(--r);
+    padding: 15px 17px; margin-bottom: 13px;
+  }
+  .titlebox label { display: block; font-size: 14px; font-weight: 700; color: var(--green); margin-bottom: 4px; }
+  .titlebox p.c { font-size: 12.5px; color: var(--green); margin: 0 0 10px; line-height: 1.65; opacity: .92; }
+  .titlebox input { font-family: var(--ser); font-size: 17px; }
+
+  .namebox { margin-bottom: 13px; }
+  .namebox label { display: block; font-size: 13px; font-weight: 700; color: var(--green); margin-bottom: 5px; }
+
   /* 동료평가 */
   .peer { background: var(--blue-soft); border-radius: var(--r); padding: 15px 17px; margin-top: 14px; }
   .peer h3 { font-size: 13.5px; font-weight: 700; color: var(--blue); margin: 0 0 4px; }
@@ -315,6 +326,10 @@
   .final h3 {
     font-family: var(--ser); font-size: 20px; font-weight: 700;
     text-align: center; margin: 0 0 22px; letter-spacing: .05em; white-space: normal;
+  }
+  .final .by {
+    font-family: var(--san); font-size: 13px; color: var(--ink-mute);
+    text-align: right; margin: -14px 0 20px; white-space: normal; letter-spacing: .02em;
   }
   .back {
     background: var(--blue-soft); border-radius: var(--r); padding: 15px 17px; margin-top: 14px;
@@ -464,6 +479,15 @@
     </div>
 
     <div id="pDone" hidden>
+      <div class="titlebox">
+        <label for="headline">제목 붙이기</label>
+        <p class="c">소설은 제목에서 완성됩니다. 다 쓴 글을 한 번 읽어 보고, 그 끝에 남는 말을 붙여 보세요. 지금 안 떠오르면 비워 두고 나중에 지어도 됩니다.</p>
+        <input type="text" id="headline" placeholder="예: 끝자리" maxlength="40" />
+      </div>
+      <div class="namebox">
+        <label for="who">이름 <span style="font-weight:400;color:var(--ink-mute)">— 그림에 함께 들어갑니다. 비워 둬도 됩니다.</span></label>
+        <input type="text" id="who" placeholder="1학년 4반 임한슬" maxlength="24" />
+      </div>
       <div class="final" id="final"></div>
       <div class="back">
         <h3>씨앗 문장 되돌아보기</h3>
@@ -496,7 +520,8 @@
       <button class="ghost" id="bPause" type="button" hidden>오늘은 여기까지</button>
       <button class="ghost" id="bResume2" type="button" hidden>초고 쓰러 가기</button>
       <button class="ghost" id="bCopy" type="button" hidden>복사하기</button>
-      <button class="ghost" id="bSave" type="button" hidden>파일로 받기</button>
+      <button class="ghost" id="bImage" type="button" hidden>그림으로 받기</button>
+      <button class="ghost" id="bSave" type="button" hidden>글자만 받기</button>
       <button class="ghost" id="bPrint" type="button" hidden>인쇄</button>
       <button class="go" id="bNext" type="button">이 이야기로</button>
     </div>
@@ -517,6 +542,7 @@
   <p class="foot" id="foot">답한 내용은 이 기기에만 저장됩니다. 창을 닫아도 이어서 쓸 수 있습니다.</p>
 </div>
 
+<script src="html2canvas.min.js"></script>
 <script>
 /* ════════════════════════════════════════════════════════════
    선생님께
@@ -524,6 +550,7 @@
    서버에 API 키가 없으면 자동으로 '안내 모드'로 돌아가니 그대로 수업할 수 있습니다.
    AI를 아예 끄고 싶으시면 "" 로 비우세요.
    ════════════════════════════════════════════════════════════ */
+var BUILD = "3 — 제목 칸 + 여러 장 그림";
 var API_BASE = "/api";
 
 (function () {
@@ -655,7 +682,8 @@ why(x) + "</div>";
   var pauseCard = $("pauseCard"), toast2 = $("toast2");
   var bPause = $("bPause"), bResume2 = $("bResume2");
   var cShot = $("cShot"), cName = $("cName"), cOpen = $("cOpen"), cShake = $("cShake"), cRest = $("cRest");
-  var pGood = $("pGood"), pMore = $("pMore");
+  var pGood = $("pGood"), pMore = $("pMore"), who = $("who"), bImage = $("bImage");
+  var headline = $("headline");
   var answer = $("answer"), draft = $("draft"), pBody = $("pBody");
   var fo = $("fo"), fs = $("fs"), fr = $("fr");
   var finalEl = $("final"), wasEl = $("was"), nowEl = $("now"), toast = $("toast");
@@ -781,7 +809,8 @@ why(x) + "</div>";
   function btns(c) {
     bDunno.hidden = !c.dunno; bSkip.hidden = !c.skip; bStuck.hidden = !c.stuck;
     bHave.hidden = !c.have; bPause.hidden = !c.pause; bResume2.hidden = !c.resume2;
-    bBack.hidden = !c.back; bCopy.hidden = !c.hand; bSave.hidden = !c.hand; bPrint.hidden = !c.hand;
+    bBack.hidden = !c.back; bCopy.hidden = !c.hand; bSave.hidden = !c.hand;
+    bPrint.hidden = !c.hand; bImage.hidden = !c.hand;
     bNext.hidden = !!c.noNext; bNext.textContent = c.next || "다음";
   }
   function focus(el) { try { el.focus(); } catch (e) {} }
@@ -993,13 +1022,14 @@ why(x) + "</div>";
     phase = "pause";
     badge.className = "badge blue"; badge.textContent = "오늘은 여기까지";
     panel("pause"); btns({ hand: true, resume2: true, noNext: true });
+    bImage.hidden = true;
     setQ("뼈대까지 만들었습니다.", false);
     setHint("다음 시간에 이 내용이 필요합니다. 같은 태블릿을 쓰면 저절로 이어지지만, 혹시 모르니 아래 내용을 종이에 옮겨 적거나 사진으로 찍어 두세요.");
     drawCarry(); drawRail(); drawHelp();
     harvest.hidden = true; siftCta.hidden = true;
     foot.textContent = "다음 시간에는 이 뼈대를 따라 한 문단을 씁니다.";
     var f = work.frame || {};
-    pauseCard.innerHTML = "<h3>" + esc(title()) + "</h3>" +
+    pauseCard.innerHTML = "<h3>" + esc(titleText()) + "</h3>" +
       row("말하고 싶은 것", work.seedline) + row("한 장면", work.shot) +
       row("인물 이름", work.name) + row("들머리", f.open) +
       row("흔들림", f.shake) + row("남는 것", f.rest);
@@ -1084,15 +1114,164 @@ why(x) + "</div>";
     setQ("한 편을 끝까지 썼습니다.", false); setHint(null);
     drawCarry(); drawRail(); drawHelp(); harvest.hidden = true; siftCta.hidden = true;
     foot.textContent = "이 글의 모든 문장은 여러분이 썼습니다.";
-    finalEl.innerHTML = "<h3>" + esc(title()) + "</h3>" + esc(work.draft);
+    drawFinal();
     wasEl.textContent = work.seedline || "(적지 않음)";
     nowEl.value = work.now || "";
     pGood.value = work.pGood || ""; pMore.value = work.pMore || "";
+    who.value = work.who || "";
+    headline.value = work.headline || "";
     save();
   }
-  function title() { return work.shot ? clip(work.shot, 22) : "제목 없음"; }
+  function drawFinal() {
+    var t = (headline.value || "").trim();
+    var n = (who.value || "").trim();
+    finalEl.innerHTML =
+      "<h3" + (t ? "" : ' style="color:var(--ink-mute);font-weight:400"') + ">" +
+      esc(t || "제목 없음") + "</h3>" +
+      (n ? '<p class="by">' + esc(n) + "</p>" : "") +
+      esc(work.draft);
+  }
+  function titleText() {
+    var t = (headline && headline.value || work.headline || "").trim();
+    return t || "제목 없음";
+  }
+  /* ── 완성 그림 만들기 ──
+     화면의 완성 카드를 그대로 떠냅니다. 새로 그리지 않으므로 보이는 그대로 나옵니다.
+     글이 길면 여러 장으로 나눕니다. 끊는 자리는 실제 줄이 끝나는 곳을 재서 잡으므로
+     글자가 반 토막 나지 않습니다.
+     html2canvas 는 같은 서버에 올려 두었습니다. 바깥에서 불러오지 않습니다. */
+
+  var PAGE_H = 1000;   /* 한 장에 담을 높이 (화면 기준) */
+
+  /* 본문의 줄이 끝나는 높이들을 재어 둡니다. */
+  function lineEnds() {
+    var node = null, i;
+    for (i = 0; i < finalEl.childNodes.length; i++) {
+      if (finalEl.childNodes[i].nodeType === 3) { node = finalEl.childNodes[i]; break; }
+    }
+    if (!node) return [];
+    var r = document.createRange();
+    r.selectNodeContents(node);
+    var rects = r.getClientRects(), base = finalEl.getBoundingClientRect(), out = [];
+    for (i = 0; i < rects.length; i++) {
+      if (rects[i].height < 2) continue;
+      var y = rects[i].bottom - base.top;
+      if (!out.length || y - out[out.length - 1] > 1) out.push(y);
+    }
+    return out;
+  }
+
+  /* 몇 장으로 나눌지, 어디서 끊을지 정합니다. */
+  function cutPoints(h) {
+    if (h <= PAGE_H * 1.15) return [];
+    var ends = lineEnds();
+    if (ends.length < 4) return [];
+    var n = Math.min(4, Math.ceil(h / PAGE_H)), cuts = [], k, i, best, bd, d;
+    for (k = 1; k < n; k++) {
+      var want = h * k / n;
+      best = -1; bd = 1e9;
+      for (i = 0; i < ends.length; i++) {
+        if (ends[i] <= (cuts.length ? cuts[cuts.length - 1] : 0) + 40) continue;
+        if (ends[i] >= h - 40) continue;
+        d = Math.abs(ends[i] - want);
+        if (d < bd) { bd = d; best = ends[i]; }
+      }
+      if (best > 0) cuts.push(best + 9);
+    }
+    return cuts;
+  }
+
+  function saveImage() {
+    if (typeof html2canvas !== "function") {
+      flash("그림 기능을 불러오지 못했습니다. 인쇄를 써 주세요."); return;
+    }
+    flash("그림을 만드는 중…");
+    bImage.disabled = true;
+
+    var cs = getComputedStyle(document.body);
+    var paper = cs.backgroundColor || "#EFF1EB";
+    var mute = (getComputedStyle(finalEl).color || "#848C7D");
+    var SC = 2;
+    var cuts = cutPoints(finalEl.offsetHeight);
+
+    var go = function () {
+      html2canvas(finalEl, {
+        backgroundColor: paper,
+        scale: SC,
+        useCORS: true,
+        logging: false,
+        scrollX: 0,
+        scrollY: -window.scrollY
+      }).then(function (cv) {
+        bImage.disabled = false;
+        var marks = [0];
+        for (var c = 0; c < cuts.length; c++) {
+          var y = Math.round(cuts[c] * SC);
+          if (y > marks[marks.length - 1] + 40 && y < cv.height - 40) marks.push(y);
+        }
+        marks.push(cv.height);
+        var total = marks.length - 1;
+        sendPages(cv, marks, total, paper, mute, SC);
+      })["catch"](function () {
+        bImage.disabled = false;
+        flash("그림을 만들지 못했습니다. 인쇄를 써 주세요.");
+      });
+    };
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(go)["catch"](go);
+    else go();
+  }
+
+  /* 장마다 아래에 여백을 두고, 여러 장일 때만 쪽수를 적습니다. */
+  function sendPages(cv, marks, total, paper, mute, SC) {
+    var foot = total > 1 ? Math.round(44 * SC) : 0;
+    var made = 0, failed = 0;
+
+    var one = function (k) {
+      if (k >= total) {
+        if (failed) flash("이 기기에서는 내려받기가 안 됩니다. 화면을 캡처해 주세요.");
+        else flash(total > 1 ? "그림 " + total + "장으로 내려받았습니다." : "그림으로 내려받았습니다.");
+        return;
+      }
+      var top = marks[k], h = marks[k + 1] - top;
+      var pg = document.createElement("canvas");
+      pg.width = cv.width; pg.height = h + foot;
+      var x = pg.getContext("2d");
+      x.fillStyle = paper;
+      x.fillRect(0, 0, pg.width, pg.height);
+      x.drawImage(cv, 0, top, cv.width, h, 0, 0, cv.width, h);
+      if (total > 1) {
+        x.fillStyle = mute;
+        x.globalAlpha = 0.62;
+        x.font = Math.round(13 * SC) + 'px -apple-system, "Noto Sans KR", sans-serif';
+        x.textAlign = "right"; x.textBaseline = "middle";
+        x.fillText((k + 1) + " / " + total, pg.width - Math.round(6 * SC), h + foot / 2);
+        x.globalAlpha = 1;
+      }
+      var name = fileBase() + (total > 1 ? "_" + (k + 1) : "") + ".png";
+      var done = function (blob) {
+        if (blob) {
+          try {
+            var u = URL.createObjectURL(blob), a = document.createElement("a");
+            a.href = u; a.download = name;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            setTimeout(function () { URL.revokeObjectURL(u); }, 2000);
+            made++;
+          } catch (e) { failed++; }
+        } else failed++;
+        setTimeout(function () { one(k + 1); }, 420);
+      };
+      if (pg.toBlob) pg.toBlob(done, "image/png"); else done(null);
+    };
+    one(0);
+  }
+
+  function fileBase() {
+    var n = (who.value || "").trim();
+    return (n ? n + "_" : "") + titleText().replace(/[\\/:*?"<>|]/g, "");
+  }
+
   function fullText() {
-    var t = title() + "\n\n" + work.draft +
+    var t = titleText() + "\n\n" + work.draft +
       "\n\n— 처음에 말하고 싶었던 것: " + (work.seedline || "(적지 않음)") +
       "\n— 다 쓰고 난 지금: " + (nowEl.value.trim() || "(적지 않음)");
     var g = pGood.value.trim(), m = pMore.value.trim();
@@ -1207,6 +1386,7 @@ why(x) + "</div>";
   bResume2.addEventListener("click", function () { toDraft(); });
   bSift.addEventListener("click", sift);
   bPrint.addEventListener("click", function () { try { window.print(); } catch (e) {} });
+  bImage.addEventListener("click", saveImage);
   bCopy.addEventListener("click", function () {
     var t = phase === "pause" ? pauseText() : fullText();
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -1218,7 +1398,7 @@ why(x) + "</div>";
     try {
       var b = new Blob([phase === "pause" ? pauseText() : fullText()], { type: "text/plain;charset=utf-8" });
       var u = URL.createObjectURL(b), a = document.createElement("a");
-      a.href = u; a.download = title().replace(/[\\/:*?"<>|]/g, "") + ".txt";
+      a.href = u; a.download = fileBase() + ".txt";
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       setTimeout(function () { URL.revokeObjectURL(u); }, 1000);
       flash("파일로 내려받았습니다.");
@@ -1250,6 +1430,10 @@ why(x) + "</div>";
   nowEl.addEventListener("input", function () { work.now = nowEl.value; save(); });
   pGood.addEventListener("input", function () { work.pGood = pGood.value; save(); });
   pMore.addEventListener("input", function () { work.pMore = pMore.value; save(); });
+  who.addEventListener("input", function () { work.who = who.value; drawFinal(); save(); });
+  headline.addEventListener("input", function () {
+    work.headline = headline.value; drawFinal(); save();
+  });
   answer.addEventListener("keydown", function (e) {
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); submit(); }
   });
