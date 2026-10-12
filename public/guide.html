@@ -1,0 +1,413 @@
+<title>한 장면 쓰는 법</title>
+<meta name="description" content="내 경험을 한 토막의 소설로 바꾸는 네 걸음 — 고등학생을 위한 자전적 소설 쓰기 안내" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" />
+
+<style>
+  :root {
+    --paper: #EFF1EB;
+    --paper-2: #F8F9F5;
+    --ink: #1B2318;
+    --ink-soft: #4C5547;
+    --ink-mute: #848C7D;
+    --line: #D8DDD3;
+    --grid: #CBD8C7;
+    --green: #2F6B4F;
+    --green-deep: #1F4A36;
+    --green-soft: #DDE9DD;
+    --blue: #2E4A6B;
+    --blue-soft: #DCE4EC;
+    --brick: #A33E27;
+    --brick-soft: #F3E3DD;
+    --hero: #1F4A36;
+    --hero-ink: #EDF2EB;
+    --hero-dim: #8FB39B;
+    --font-ser: "Gowun Batang", "Batang", serif;
+    --font-san: "Noto Sans KR", system-ui, -apple-system, sans-serif;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --paper: #13170F;
+      --paper-2: #1C2118;
+      --ink: #E8EBE0;
+      --ink-soft: #AFB6A6;
+      --ink-mute: #7C8475;
+      --line: #2E3529;
+      --grid: #303B2E;
+      --green: #7FB894;
+      --green-deep: #9BCCAC;
+      --green-soft: #1E2C21;
+      --blue: #8FB0D0;
+      --blue-soft: #1B2531;
+      --brick: #D98A73;
+      --brick-soft: #2D1F1A;
+      --hero: #16301F;
+      --hero-ink: #E4EDE2;
+      --hero-dim: #7E9E89;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #13170F;
+    --paper-2: #1C2118;
+    --ink: #E8EBE0;
+    --ink-soft: #AFB6A6;
+    --ink-mute: #7C8475;
+    --line: #2E3529;
+    --grid: #303B2E;
+    --green: #7FB894;
+    --green-deep: #9BCCAC;
+    --green-soft: #1E2C21;
+    --blue: #8FB0D0;
+    --blue-soft: #1B2531;
+    --brick: #D98A73;
+    --brick-soft: #2D1F1A;
+    --hero: #16301F;
+    --hero-ink: #E4EDE2;
+    --hero-dim: #7E9E89;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-san);
+    font-size: 16px;
+    line-height: 1.8;
+    -webkit-font-smoothing: antialiased;
+  }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
+  /* ── hero: the transformation itself ── */
+  .hero {
+    background: var(--hero);
+    color: var(--hero-ink);
+    padding-block: 52px 46px;
+    padding-inline: 20px;
+  }
+  .hero-in { max-width: 600px; margin: 0 auto; }
+  .hero h1 {
+    font-family: var(--font-ser); font-weight: 700;
+    font-size: 34px; line-height: 1.3; margin: 0 0 6px; letter-spacing: -.01em;
+  }
+  .hero .sub { color: var(--hero-dim); font-size: 14.5px; margin: 0 0 32px; }
+
+  .flip { margin: 0 0 26px; }
+  .flip .was {
+    font-family: var(--font-ser); font-size: 19px; line-height: 1.6;
+    color: var(--hero-dim); text-decoration: line-through;
+    text-decoration-thickness: 1px; text-decoration-color: var(--hero-dim);
+    margin: 0;
+  }
+  .flip .turn {
+    display: block; width: 1px; height: 22px; background: var(--hero-dim);
+    margin: 10px 0 10px 14px;
+  }
+  .flip .now {
+    font-family: var(--font-ser); font-weight: 700; font-size: 23px;
+    line-height: 1.55; color: var(--hero-ink); margin: 0;
+  }
+  .hero .says {
+    font-size: 15px; color: var(--hero-dim); margin: 0;
+    border-top: 1px solid rgba(143,179,155,.3); padding-top: 20px;
+  }
+
+  /* ── page body ── */
+  .wrap { max-width: 600px; margin: 0 auto; padding-inline: 20px; padding-block: 44px 72px; }
+  h2 {
+    font-family: var(--font-ser); font-weight: 700; font-size: 23px;
+    line-height: 1.4; margin: 0 0 14px;
+  }
+  p { margin: 0 0 15px; }
+  p:last-child { margin-bottom: 0; }
+  .soft { color: var(--ink-soft); }
+  strong { font-weight: 700; }
+
+  .gap-list { margin: 22px 0 0; padding: 0; list-style: none; }
+  .gap-list li {
+    display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center;
+    padding: 13px 0; border-top: 1px solid var(--line); font-size: 14.5px; line-height: 1.6;
+  }
+  .gap-list li:last-child { border-bottom: 1px solid var(--line); }
+  .gap-list .l { color: var(--ink-mute); }
+  .gap-list .m { color: var(--green); font-size: 13px; }
+  .gap-list .r { color: var(--ink); }
+
+  /* ── steps on a manuscript margin rail ── */
+  .steps { margin: 46px 0 0; }
+  .step { position: relative; padding-left: 58px; padding-bottom: 38px; }
+  .step:last-child { padding-bottom: 0; }
+  .step::before {
+    content: ""; position: absolute; left: 19px; top: 42px; bottom: 0;
+    width: 1px; background: var(--line);
+  }
+  .step:last-child::before { display: none; }
+  .box {
+    position: absolute; left: 0; top: 2px;
+    width: 38px; height: 38px;
+    border: 1.5px solid var(--green); border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-ser); font-weight: 700; font-size: 18px;
+    color: var(--green); background: var(--paper);
+  }
+  .step h3 {
+    font-family: var(--font-ser); font-weight: 700; font-size: 21px;
+    margin: 0 0 2px; line-height: 1.4;
+  }
+  .step .tagline { font-size: 14px; color: var(--ink-mute); margin: 0 0 14px; }
+  .step p { font-size: 15.5px; }
+
+  .swap { margin: 16px 0 0; }
+  .swap .a, .swap .b { padding: 12px 15px; font-size: 15px; line-height: 1.6; }
+  .swap .a {
+    background: var(--paper-2); border: 1px solid var(--line);
+    border-radius: 3px 3px 0 0; color: var(--ink-mute);
+  }
+  .swap .b {
+    background: var(--green-soft); border: 1px solid var(--green);
+    border-top: 0; border-radius: 0 0 3px 3px;
+    color: var(--ink); font-family: var(--font-ser);
+  }
+  .swap .lab {
+    display: block; font-family: var(--font-san); font-size: 11.5px;
+    color: var(--ink-mute); margin-bottom: 3px;
+  }
+  .swap .b .lab { color: var(--green); }
+
+  .keep {
+    margin: 16px 0 0; padding: 13px 16px;
+    background: var(--blue-soft); border-radius: 3px;
+    font-size: 14.5px; line-height: 1.65; color: var(--blue);
+  }
+
+  .three { margin: 16px 0 0; padding: 0; list-style: none; }
+  .three li {
+    padding: 11px 0 11px 0; border-top: 1px solid var(--line);
+    font-size: 15px; line-height: 1.65;
+  }
+  .three li:last-child { border-bottom: 1px solid var(--line); }
+  .three b { color: var(--green); font-weight: 700; display: block; font-size: 14px; }
+
+  /* ── trap ── */
+  .trap {
+    margin: 46px 0 0; padding: 24px 22px;
+    background: var(--brick-soft); border-radius: 4px;
+  }
+  .trap h2 { color: var(--brick); margin-bottom: 12px; }
+  .trap p { font-size: 15px; }
+  .banned { display: flex; flex-wrap: wrap; gap: 7px; margin: 16px 0; }
+  .banned span {
+    font-size: 13.5px; color: var(--brick); background: var(--paper);
+    padding: 5px 12px; border-radius: 3px;
+    text-decoration: line-through; text-decoration-thickness: 1px;
+  }
+
+  /* ── the scene, printed on manuscript paper ── */
+  .scene-wrap { margin: 52px 0 0; }
+  .scene {
+    margin-top: 16px;
+    background-color: var(--paper-2);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 30px 30px;
+    background-position: -1px -1px;
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--green);
+    border-radius: 2px;
+    padding: 34px 28px;
+    font-family: var(--font-ser);
+    font-size: 16.5px;
+    line-height: 2.05;
+  }
+  .scene h3 {
+    font-family: var(--font-ser); font-weight: 700; font-size: 21px;
+    text-align: center; margin: 0 0 28px; letter-spacing: .06em;
+  }
+  .scene p { margin: 0 0 19px; }
+  .scene p.line { text-align: center; color: var(--ink-soft); }
+
+  .howto { margin: 26px 0 0; }
+  .howto .row {
+    display: grid; grid-template-columns: 76px 1fr; gap: 14px;
+    padding: 12px 0; border-top: 1px solid var(--line);
+    font-size: 14.5px; line-height: 1.65;
+  }
+  .howto .row:last-child { border-bottom: 1px solid var(--line); }
+  .howto .row b { color: var(--green); font-weight: 700; }
+  .howto .row span { color: var(--ink-soft); }
+
+  /* ── takeaway card ── */
+  .card {
+    margin: 52px 0 0; padding: 28px 26px;
+    background: var(--hero); color: var(--hero-ink); border-radius: 4px;
+  }
+  .card h2 { color: var(--hero-ink); margin-bottom: 6px; }
+  .card .sub { color: var(--hero-dim); font-size: 14px; margin: 0 0 20px; }
+  .card ol { margin: 0; padding-left: 0; list-style: none; counter-reset: n; }
+  .card li {
+    counter-increment: n; position: relative; padding-left: 34px;
+    font-family: var(--font-ser); font-size: 16.5px; line-height: 1.6;
+    margin-bottom: 14px;
+  }
+  .card li:last-child { margin-bottom: 0; }
+  .card li::before {
+    content: counter(n); position: absolute; left: 0; top: 1px;
+    width: 22px; height: 22px; border: 1px solid var(--hero-dim); border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-san); font-size: 12px; color: var(--hero-dim);
+  }
+  .card .last {
+    margin-top: 20px; padding-top: 18px; font-size: 14.5px; color: var(--hero-dim);
+    border-top: 1px solid rgba(143,179,155,.3); font-family: var(--font-san);
+  }
+
+  @media (min-width: 620px) {
+    .hero { padding-block: 72px 60px; }
+    .hero h1 { font-size: 40px; }
+    .flip .was { font-size: 21px; }
+    .flip .now { font-size: 26px; }
+  }
+  @media (max-width: 420px) {
+    .hero h1 { font-size: 29px; }
+    .flip .now { font-size: 20.5px; }
+    .flip .was { font-size: 17px; }
+    .step { padding-left: 50px; }
+    .box { width: 34px; height: 34px; font-size: 16px; }
+    .step::before { left: 17px; }
+    .scene { padding: 26px 18px; font-size: 16px; }
+    .gap-list li { grid-template-columns: 1fr; gap: 3px; }
+    .gap-list .m { display: none; }
+    .gap-list .l::after { content: " →"; color: var(--green); }
+    .howto .row { grid-template-columns: 1fr; gap: 2px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<header class="hero">
+  <div class="hero-in">
+    <h1>한 장면 쓰는 법</h1>
+    <p class="sub">내 이야기를 소설로 바꾸는 네 걸음</p>
+
+    <div class="flip">
+      <p class="was">나는 몹시 서운했다.</p>
+      <span class="turn" aria-hidden="true"></span>
+      <p class="now">나는 교실 문을 평소보다 조금 세게 닫았다.</p>
+    </div>
+
+    <p class="says">소설로 쓴다는 건 대개 이런 바꿈입니다. 없던 일을 지어내는 게 아니라, 있었던 일을 다르게 적는 것입니다. 오늘은 <b>한 문단</b>만 써 봅니다.</p>
+  </div>
+</header>
+
+<div class="wrap">
+  <h1 class="sr-only">한 장면 쓰는 법 — 경험을 한 토막의 소설로 바꾸는 네 걸음</h1>
+
+  <section>
+    <h2>겪은 일을 그대로 쓰면 왜 소설이 안 될까요</h2>
+    <p class="soft">읽기만 하던 문학을 직접 해 보는 시간입니다. 여러분이 모은 글감은 재료입니다. 좋은 재료인데도 그대로 적으면 소설이 아니라 일기나 줄거리가 됩니다. 재료와 이야기 사이에 네 개의 간격이 있기 때문입니다.</p>
+    <ul class="gap-list">
+      <li><span class="l">기억은 뭉뚱그려 남습니다<br>"멀어졌다"</span><span class="m">↔</span><span class="r">소설은 한 순간을 적습니다<br>"그날 급식실에서"</span></li>
+      <li><span class="l">겪은 사람은 나입니다</span><span class="m">↔</span><span class="r">이야기의 주인공은 인물입니다</span></li>
+      <li><span class="l">시간은 계속 흐릅니다</span><span class="m">↔</span><span class="r">장면은 잘라낸 토막입니다</span></li>
+      <li><span class="l">감정은 말로 떠오릅니다<br>"서운했다"</span><span class="m">↔</span><span class="r">소설은 감정을 보여줍니다</span></li>
+    </ul>
+  </section>
+
+  <section class="steps">
+    <article class="step">
+      <span class="box" aria-hidden="true">1</span>
+      <h3>좁히기</h3>
+      <p class="tagline">전부 말고, 한 순간만</p>
+      <p>몇 달이나 몇 년을 한꺼번에 쓰려고 하면 줄거리 요약이 됩니다. 영화로 치면 예고편 말고 한 컷만 남기는 일입니다.</p>
+      <p>어느 순간을 고를지는 기준이 있습니다. <strong>달라진 것이 처음 눈에 보인 자리</strong>입니다.</p>
+      <div class="swap">
+        <div class="a"><span class="lab">덩어리</span>작년 내내 그 친구와 멀어졌다</div>
+        <div class="b"><span class="lab">한 컷</span>급식실에서 처음 혼자 앉은 그날 점심</div>
+      </div>
+    </article>
+
+    <article class="step">
+      <span class="box" aria-hidden="true">2</span>
+      <h3>이름 붙이기</h3>
+      <p class="tagline">내 일에서 한 발짝 떨어지기</p>
+      <p>이름을 붙이는 순간 '내 일'이 '이야기'가 됩니다. 이름, 성별, 학교, 계절은 바꿔도 됩니다. 사실 그대로 쓰지 않아도 되니 꺼내기 어려운 이야기도 쓸 수 있습니다.</p>
+      <p>바꾸면 좋은 점이 하나 더 있습니다. 내 일일 때는 내 편만 들게 되는데, 인물의 일이 되면 <strong>상대의 사정도 쓸 수 있게</strong> 됩니다.</p>
+      <div class="keep">딱 하나, 그때의 감정만은 바꾸지 마세요. 이름은 지어내도 되지만 마음이 지어낸 것이면 글이 가짜가 됩니다.</div>
+    </article>
+
+    <article class="step">
+      <span class="box" aria-hidden="true">3</span>
+      <h3>자르기</h3>
+      <p class="tagline">어디서 시작해 어디서 끊을까</p>
+      <p>장면을 세 칸으로 나눕니다. 어려운 건 가운데가 아니라 처음과 끝입니다.</p>
+      <ul class="three">
+        <li><b>들머리</b>아직 아무 일도 안 일어난 상태. 평소에 늘 하던 일을 한 번 보여줍니다. 이게 있어야 뒤에 어긋나는 게 보입니다.</li>
+        <li><b>흔들림</b>무언가 어긋납니다. 말 한 줄이나 작은 행동 하나면 충분합니다.</li>
+        <li><b>남는 것</b>끝. 여기서 대부분의 글이 무너집니다. 조금 뒤에 다시 이야기하겠습니다.</li>
+      </ul>
+    </article>
+
+    <article class="step">
+      <span class="box" aria-hidden="true">4</span>
+      <h3>보여주기</h3>
+      <p class="tagline">감정을 몸으로 옮기기</p>
+      <p>규칙은 하나입니다. <strong>감정을 적은 자리에 그때 하고 있던 행동을 넣습니다.</strong> 감정을 쓰지 말라는 게 아니라, 감정을 몸으로 옮기라는 뜻입니다.</p>
+      <div class="swap">
+        <div class="a"><span class="lab">말하기</span>혼자라서 어색했다</div>
+        <div class="b"><span class="lab">보여주기</span>저을 이유가 없는데 숟가락으로 국을 계속 저었다</div>
+      </div>
+      <div class="swap" style="margin-top:12px">
+        <div class="a"><span class="lab">말하기</span>너무 긴장됐다</div>
+        <div class="b"><span class="lab">보여주기</span>주머니 속에서 손을 쥐었다 폈다 했다</div>
+      </div>
+    </article>
+  </section>
+
+  <section class="trap">
+    <h2>마지막 한 문단을 조심하세요</h2>
+    <p>네 걸음을 잘 밟고도 끝에 가서 이렇게 적는 경우가 아주 많습니다.</p>
+    <p style="font-family:var(--font-ser); font-size:16.5px; color:var(--brick)">"그 일을 통해 나는 한층 성장할 수 있었다."</p>
+    <p>이 한 줄이 들어가는 순간 소설이 생활문이 됩니다. 성장은 <strong>말하면 사라지고 보여주면 남습니다.</strong> 아래 표현은 아예 쓰지 않기로 합시다.</p>
+    <div class="banned">
+      <span>그 일을 통해</span><span>깨달았다</span><span>성장할 수 있었다</span>
+      <span>소중함을 알게 되었다</span><span>한 뼘 자랐다</span><span>배울 수 있었다</span>
+    </div>
+    <p style="margin-bottom:0">대신 <strong>마지막은 행동이나 사물로 끝냅니다.</strong> 달라진 나를 보여주는 작은 동작 하나면 됩니다. 읽는 사람이 알아서 알아봅니다.</p>
+  </section>
+
+  <section class="scene-wrap">
+    <h2>네 걸음을 다 밟으면</h2>
+    <p class="soft">아래는 "작년에 친했던 친구와 멀어졌다"는 글감 하나를 네 걸음에 통과시킨 글입니다. <strong>딱 한 문단입니다.</strong> 오늘 여러분이 쓸 분량도 이 정도면 충분합니다.</p>
+
+    <div class="scene">
+      <h3>끝자리</h3>
+      <p>점심 종이 울리면 서현은 늘 교실 뒷문에서 지원을 기다렸다. 그날은 지원이 먼저 일어섰다. 먼저 갈게, 하고는 민지랑 채원이랑 셋이 나란히 앞문으로 나갔다. 서현은 창가 끝자리에 혼자 식판을 내려놓았다. 국이 뜨거웠다. 저을 이유가 없었는데 계속 저었다. 김이 다 걷히고 나니 더 할 일이 없어서 그냥 먹었다. 식어 있었다. 밥을 반쯤 먹었을 때 서현은 자리에서 일어나 국그릇을 들고 배식대로 갔다. 한 국자를 더 떴다. 뜨거운 걸로.</p>
+    </div>
+
+    <div class="howto">
+      <div class="row"><b>좁히기</b><span>작년 한 해가 아니라 점심 한 끼로 줄었습니다.</span></div>
+      <div class="row"><b>이름 붙이기</b><span>서현과 지원이라는 이름이 붙었습니다. 이름이 생기니 '내 일'이 아니라 '이야기'가 됩니다.</span></div>
+      <div class="row"><b>자르기</b><span>기다리는 평소 모습에서 시작해 국을 다시 떠 오는 데서 끊었습니다. 화해도 없고 결말도 없습니다.</span></div>
+      <div class="row"><b>보여주기</b><span>'서운했다'도 '외로웠다'도 한 번도 안 나옵니다. 서운함은 국을 젓는 손이 대신합니다.</span></div>
+      <div class="row"><b>마지막</b><span>"뜨거운 걸로"에서 끝납니다. 성장했다는 말은 없지만, 혼자 못 견디던 사람이 혼자 일어나 뜨거운 국을 떠 오는 걸 읽는 사람이 봅니다.</span></div>
+    </div>
+
+    <p class="soft" style="margin-top:22px">세어 보면 열 문장쯤입니다. 더 쓰고 싶으면 더 써도 되지만, <strong>이만큼이면 한 편입니다.</strong></p>
+  </section>
+
+  <section class="card">
+    <h2>쓰다가 막히면 이 네 줄</h2>
+    <p class="sub">화면을 캡처해 두고 보세요</p>
+    <ol>
+      <li>한 순간만 고른다. 달라진 것이 처음 보인 그 순간.</li>
+      <li>이름을 붙인다. 바꿔도 되지만 감정은 진짜로.</li>
+      <li>평소에서 시작해 어긋나는 데서 끊는다.</li>
+      <li>감정을 적은 자리에 그때의 행동을 넣는다.</li>
+    </ol>
+    <p class="last">마지막 문장은 행동이나 사물로 끝냅니다. "성장했다"고 쓰고 싶어지면, 그 자리에 무엇을 하고 있는 나를 넣을지 생각해 보세요.</p>
+  </section>
+</div>

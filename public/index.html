@@ -191,6 +191,25 @@
     margin: 6px 2px 0; font-variant-numeric: tabular-nums;
   }
 
+  /* 시작 화면 — 오늘 어디서부터 할지 */
+  .pick3 { display: flex; flex-direction: column; gap: 9px; }
+  .big3 {
+    text-align: left; padding: 15px 17px; border-radius: var(--r);
+    border: 1px solid var(--line); background: var(--raise); width: 100%;
+  }
+  .big3:hover { border-color: var(--green); background: var(--green-soft); }
+  .big3 b {
+    display: block; font-family: var(--ser); font-size: 16.5px;
+    font-weight: 700; color: var(--ink); margin-bottom: 2px;
+  }
+  .big3 span { display: block; font-size: 13px; color: var(--ink-mute); line-height: 1.5; }
+
+  /* 동료평가 */
+  .peer { background: var(--blue-soft); border-radius: var(--r); padding: 15px 17px; margin-top: 14px; }
+  .peer h3 { font-size: 13.5px; font-weight: 700; color: var(--blue); margin: 0 0 4px; }
+  .peer p.c { font-size: 12.5px; color: var(--blue); margin: 0 0 10px; line-height: 1.6; opacity: .9; }
+  .peer label { display: block; font-size: 12.5px; font-weight: 700; color: var(--blue); margin: 9px 0 3px; }
+
   .trail { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 11px; }
   .trail span {
     font-size: 11.5px; color: var(--ink-soft); background: var(--paper-2);
@@ -360,6 +379,44 @@
     <p class="q" id="q">—</p>
     <p class="hint" id="hint" hidden></p>
 
+    <div id="pStart" hidden>
+      <div class="pick3">
+        <button type="button" class="big3" data-go="fresh">
+          <b>글감 찾기</b><span>오늘 처음이에요. 질문을 받으며 쓸 이야기를 찾습니다</span>
+        </button>
+        <button type="button" class="big3" data-go="have">
+          <b>쓸 이야기가 떠올라요</b><span>쓰고 싶은 일이 있어요. 그것부터 적고 시작합니다</span>
+        </button>
+        <button type="button" class="big3" data-go="carry">
+          <b>이어서 쓰기</b><span>뼈대까지 만들어 뒀어요. 옮겨 적고 바로 한 문단 쓰기로</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="pCarry" hidden>
+      <div class="fbox">
+        <label for="cShot">쓰기로 한 한 장면</label>
+        <p class="fh">쓰기로 한 그 순간을 한 줄로.</p>
+        <textarea id="cShot" rows="2" placeholder="예: 급식실에서 처음 혼자 앉은 그날 점심"></textarea>
+      </div>
+      <div class="fbox">
+        <label for="cName">주인공 이름</label>
+        <textarea id="cName" rows="1" placeholder="예: 서현"></textarea>
+      </div>
+      <div class="fbox">
+        <label for="cOpen">들머리</label>
+        <textarea id="cOpen" rows="2" placeholder="평소에 늘 하던 일 하나"></textarea>
+      </div>
+      <div class="fbox">
+        <label for="cShake">흔들림</label>
+        <textarea id="cShake" rows="2" placeholder="무언가 어긋나는 순간"></textarea>
+      </div>
+      <div class="fbox">
+        <label for="cRest">남는 것</label>
+        <textarea id="cRest" rows="2" placeholder="달라진 나를 보여주는 행동 하나"></textarea>
+      </div>
+    </div>
+
     <div id="pAsk">
       <label for="answer" class="sr-only">답 적기</label>
       <textarea id="answer" placeholder="떠오르는 대로 편하게 적어 보세요. 짧아도 괜찮아요."></textarea>
@@ -401,6 +458,11 @@
       </div>
     </div>
 
+    <div id="pPause" hidden>
+      <div class="final" id="pauseCard"></div>
+      <p class="toast" id="toast2"></p>
+    </div>
+
     <div id="pDone" hidden>
       <div class="final" id="final"></div>
       <div class="back">
@@ -409,6 +471,14 @@
         <div class="was" id="was"></div>
         <p>다 쓰고 난 지금도 같나요? 달라졌다면, 그건 쓰는 동안 생각이 움직였다는 뜻입니다.</p>
         <textarea id="now" rows="2" placeholder="지금은 이렇게 말하고 싶습니다…"></textarea>
+      </div>
+      <div class="peer">
+        <h3>친구에게 보여주기</h3>
+        <p class="c">짝에게 태블릿을 건네 두 가지만 적어 달라고 하세요. 고쳐 달라고 하지 않아도 됩니다.</p>
+        <label for="pGood">여기가 좋았어 — 문장 하나를 그대로 옮겨 적기</label>
+        <textarea id="pGood" rows="2" placeholder="예: ‘국을 다 젓고 나니 더 할 일이 없었다’ 이 문장"></textarea>
+        <label for="pMore">여기가 더 궁금해 — 더 읽고 싶은 대목</label>
+        <textarea id="pMore" rows="2" placeholder="예: 그 뒤에 두 사람이 다시 만났는지"></textarea>
       </div>
       <p class="toast" id="toast"></p>
     </div>
@@ -423,6 +493,8 @@
       <button class="ghost" id="bSkip" type="button" hidden>이 물음은 건너뛰기</button>
       <button class="ghost" id="bStuck" type="button" hidden>막혔어요</button>
       <button class="ghost" id="bBack" type="button" hidden>더 고치러 가기</button>
+      <button class="ghost" id="bPause" type="button" hidden>오늘은 여기까지</button>
+      <button class="ghost" id="bResume2" type="button" hidden>이어서 쓰러 가기</button>
       <button class="ghost" id="bCopy" type="button" hidden>복사하기</button>
       <button class="ghost" id="bSave" type="button" hidden>파일로 받기</button>
       <button class="ghost" id="bPrint" type="button" hidden>인쇄</button>
@@ -544,7 +616,7 @@ why(x) + "</div>";
         "<h4>감정은 이렇게 바꿉니다</h4>" + pairs(SHOWING) +
         "<h4>쓰지 않을 말</h4><div class='banwords'>" +
         BANNED.map(function (w) { return "<span>" + esc(w) + "</span>"; }).join("") + "</div>" +
-        '<p class="tip">한 번에 잘 쓰려 하지 마세요. 들머리부터 한 문단씩 쌓으면 됩니다.</p>';
+        '<p class="tip">오늘은 <b>한 문단</b>이면 됩니다. 들머리부터 한 문장씩 이어 보세요. 세 칸을 한 문단 안에 다 담아도 좋습니다.</p>';
     }
   };
 
@@ -559,6 +631,7 @@ why(x) + "</div>";
     { k: "write", l: "초고 쓰기" }, { k: "fix", l: "다듬기" }
   ];
   var PH = {
+    start: "collect", carry: "design", pause: "design",
     gather: "collect", deepen: "collect", reflect: "collect", sift: "collect",
     seedline: "design", narrow: "design", cast: "design", frame: "design",
     draft: "write", polish: "fix", done: "fix"
@@ -569,6 +642,11 @@ why(x) + "</div>";
   var qEl = $("q"), hint = $("hint"), err = $("err"), foot = $("foot"), modeEl = $("mode");
   var help = $("help"), countN = $("countN");
   var pAsk = $("pAsk"), pFrame = $("pFrame"), pDraft = $("pDraft"), pPolish = $("pPolish"), pDone = $("pDone");
+  var pStart = $("pStart"), pCarry = $("pCarry"), pPause = $("pPause");
+  var pauseCard = $("pauseCard"), toast2 = $("toast2");
+  var bPause = $("bPause"), bResume2 = $("bResume2");
+  var cShot = $("cShot"), cName = $("cName"), cOpen = $("cOpen"), cShake = $("cShake"), cRest = $("cRest");
+  var pGood = $("pGood"), pMore = $("pMore");
   var answer = $("answer"), draft = $("draft"), pBody = $("pBody");
   var fo = $("fo"), fs = $("fs"), fr = $("fr");
   var finalEl = $("final"), wasEl = $("was"), nowEl = $("now"), toast = $("toast");
@@ -688,14 +766,36 @@ why(x) + "</div>";
   function panel(w) {
     pAsk.hidden = w !== "ask"; pFrame.hidden = w !== "frame"; pDraft.hidden = w !== "draft";
     pPolish.hidden = w !== "polish"; pDone.hidden = w !== "done";
+    pStart.hidden = w !== "start"; pCarry.hidden = w !== "carry";
+    pPause.hidden = w !== "pause";
   }
   function btns(c) {
     bDunno.hidden = !c.dunno; bSkip.hidden = !c.skip; bStuck.hidden = !c.stuck;
-    bHave.hidden = !c.have;
+    bHave.hidden = !c.have; bPause.hidden = !c.pause; bResume2.hidden = !c.resume2;
     bBack.hidden = !c.back; bCopy.hidden = !c.hand; bSave.hidden = !c.hand; bPrint.hidden = !c.hand;
     bNext.hidden = !!c.noNext; bNext.textContent = c.next || "다음";
   }
   function focus(el) { try { el.focus(); } catch (e) {} }
+
+  /* ── 시작 ── */
+  function start() {
+    phase = "start"; harvest.hidden = true; siftCta.hidden = true;
+    badge.className = "badge"; badge.textContent = "오늘 수업";
+    panel("start"); btns({ noNext: true });
+    setQ("오늘은 어디서부터 할까요?", false);
+    setHint("처음이면 위에서, 뼈대를 이미 만들어 뒀다면 아래에서 시작하세요.");
+    hideErr(); drawCarry(); drawRail(); drawHelp(); drawDots(0);
+    foot.textContent = "답한 내용은 이 기기에만 저장됩니다. 창을 닫아도 이어서 쓸 수 있습니다.";
+    save();
+  }
+  function carryIn() {
+    phase = "carry";
+    badge.className = "badge"; badge.textContent = "이어서 쓰기";
+    panel("carry"); btns({ next: "이대로 초고 쓰러 가기" });
+    setQ("만들어 둔 뼈대를 옮겨 적어 주세요.", false);
+    setHint("적어 둔 것을 그대로 옮기면 됩니다. 조금 달라져도 괜찮아요.");
+    hideErr(); drawCarry(); drawRail(); drawHelp(); focus(cShot); save();
+  }
 
   /* ── 글감 모으기 ── */
   function gather() {
@@ -853,9 +953,9 @@ why(x) + "</div>";
   function toDraft() {
     phase = "draft";
     badge.className = "badge"; badge.textContent = "초고 쓰기";
-    panel("draft"); btns({ stuck: true, next: "다 썼어요" });
+    panel("draft"); btns({ stuck: true, pause: true, next: "다 썼어요" });
     setQ("이제 " + (work.name || "주인공") + "의 장면을 써 보세요.", false);
-    setHint("감정을 직접 말하는 대신 행동과 사물로 보여주면 글이 살아납니다. 막히면 아래 '막혔어요'를 누르세요. 문장을 대신 써 주지는 않고, 질문을 하나 드립니다.");
+    setHint("오늘 목표는 한 문단입니다. 길게 쓰지 않아도 됩니다. 감정을 직접 말하는 대신 행동과 사물로 보여주면 글이 살아납니다. 막히면 아래 '막혔어요'를 누르세요. 문장을 대신 써 주지는 않고, 질문을 하나 드립니다.");
     hideErr(); drawCarry(); drawRail();
     foot.textContent = "여기서부터 끝까지, 문장은 전부 여러분이 씁니다.";
     drawHelp(); tickCount(); focus(draft); save();
@@ -877,6 +977,37 @@ why(x) + "</div>";
       setQ(q || STUCK_Q[stuckN++ % STUCK_Q.length], false);
       lock(false); focus(draft);
     });
+  }
+
+  /* ── 1차시 마무리 ── */
+  function pause() {
+    phase = "pause";
+    badge.className = "badge blue"; badge.textContent = "오늘은 여기까지";
+    panel("pause"); btns({ hand: true, resume2: true, noNext: true });
+    setQ("뼈대까지 만들었습니다.", false);
+    setHint("다음 시간에 이 내용이 필요합니다. 같은 태블릿을 쓰면 저절로 이어지지만, 혹시 모르니 아래 내용을 종이에 옮겨 적거나 사진으로 찍어 두세요.");
+    drawCarry(); drawRail(); drawHelp();
+    harvest.hidden = true; siftCta.hidden = true;
+    foot.textContent = "다음 시간에는 이 뼈대를 따라 한 문단을 씁니다.";
+    var f = work.frame || {};
+    pauseCard.innerHTML = "<h3>" + esc(title()) + "</h3>" +
+      row("말하고 싶은 것", work.seedline) + row("한 장면", work.shot) +
+      row("인물 이름", work.name) + row("들머리", f.open) +
+      row("흔들림", f.shake) + row("남는 것", f.rest);
+    save();
+  }
+  function row(k, v) {
+    return '<div style="display:flex;gap:12px;padding:7px 0;border-bottom:1px solid var(--line-soft);' +
+      'font-family:var(--san);font-size:14px;line-height:1.6">' +
+      '<b style="flex:none;width:86px;color:var(--green);font-size:12.5px">' + esc(k) + "</b>" +
+      '<span style="font-family:var(--ser)">' + esc(v || "(없음)") + "</span></div>";
+  }
+  function pauseText() {
+    var f = work.frame || {};
+    return "[다음 시간에 쓸 것]\n한 장면: " + (work.shot || "") +
+      "\n말하고 싶은 것: " + (work.seedline || "") +
+      "\n인물 이름: " + (work.name || "") +
+      "\n들머리: " + (f.open || "") + "\n흔들림: " + (f.shake || "") + "\n남는 것: " + (f.rest || "");
   }
 
   /* ── 다듬기 ── */
@@ -947,15 +1078,25 @@ why(x) + "</div>";
     finalEl.innerHTML = "<h3>" + esc(title()) + "</h3>" + esc(work.draft);
     wasEl.textContent = work.seedline || "(적지 않음)";
     nowEl.value = work.now || "";
+    pGood.value = work.pGood || ""; pMore.value = work.pMore || "";
     save();
   }
   function title() { return work.shot ? clip(work.shot, 22) : "제목 없음"; }
   function fullText() {
-    return title() + "\n\n" + work.draft +
-      "\n\n— 처음에 말하고 싶었던 것: " + (work.seedline || "") +
-      "\n— 다 쓰고 난 지금: " + (nowEl.value.trim() || "");
+    var t = title() + "\n\n" + work.draft +
+      "\n\n— 처음에 말하고 싶었던 것: " + (work.seedline || "(적지 않음)") +
+      "\n— 다 쓰고 난 지금: " + (nowEl.value.trim() || "(적지 않음)");
+    var g = pGood.value.trim(), m = pMore.value.trim();
+    if (g || m) {
+      t += "\n\n[친구가 읽고]\n— 여기가 좋았어: " + (g || "(적지 않음)") +
+           "\n— 여기가 더 궁금해: " + (m || "(적지 않음)");
+    }
+    return t;
   }
-  function flash(m) { toast.textContent = m; setTimeout(function () { toast.textContent = ""; }, 2200); }
+  function flash(m) {
+    var el = phase === "pause" ? toast2 : toast;
+    el.textContent = m; setTimeout(function () { el.textContent = ""; }, 2200);
+  }
 
   /* ── 진행 ── */
   function submit() {
@@ -989,13 +1130,25 @@ why(x) + "</div>";
       if (v.length < 1) return showErr("이름을 하나 지어 주세요. 아무 이름이어도 됩니다.");
       work.name = v; return frame();
     }
+    if (phase === "carry") {
+      var cs = cShot.value.trim(), cn = cName.value.trim();
+      var co = cOpen.value.trim(), ck = cShake.value.trim(), cr = cRest.value.trim();
+      if (cs.length < 2) { showErr("쓰기로 한 한 장면을 적어 주세요."); return; }
+      if (co.length < 2 || ck.length < 2 || cr.length < 2) {
+        showErr("뼈대 세 칸을 모두 적어 주세요. 각 한 줄이면 됩니다."); return;
+      }
+      work.seed = { title: cs, parts: [] };
+      work.shot = cs; work.name = cn || "주인공";
+      work.frame = { open: co, shake: ck, rest: cr };
+      return toDraft();
+    }
     if (phase === "frame") {
       var a = fo.value.trim(), b = fs.value.trim(), c = fr.value.trim();
       if (a.length < 2 || b.length < 2 || c.length < 2) return showErr("세 칸을 모두 채워 주세요. 각 한 줄이면 충분합니다.");
       work.frame = { open: a, shake: b, rest: c }; return toDraft();
     }
     if (phase === "draft") {
-      if (draft.value.trim().length < 80) return showErr("조금 더 써 보고 넘어갈까요? 아직 다듬을 만큼 쌓이지 않았어요.");
+      if (draft.value.trim().length < 60) return showErr("조금만 더 써 볼까요? 두세 문장만 더 있으면 됩니다.");
       work.draft = draft.value.trim(); return polish();
     }
     if (phase === "polish") { work.draft = draft.value.trim(); return done(); }
@@ -1020,6 +1173,18 @@ why(x) + "</div>";
   /* ── 이벤트 ── */
   bNext.addEventListener("click", submit);
   bDunno.addEventListener("click", function () { if (!bDunno.disabled) dunno(); });
+  pStart.addEventListener("click", function (e) {
+    var b = e.target && e.target.closest ? e.target.closest("[data-go]") : null;
+    if (!b) return;
+    var go = b.getAttribute("data-go");
+    if (go === "fresh") return gather();
+    if (go === "carry") return carryIn();
+    gather();
+    setQ("쓰고 싶은 이야기를 한 줄로 적어 보세요.", false);
+    setHint("예: 작년에 친했던 친구와 멀어진 일 / 처음으로 혼자 버스를 타고 간 날");
+    answer.placeholder = "어떤 일이었는지 한 줄이면 됩니다.";
+    bHave.hidden = true; bDunno.hidden = true; focus(answer);
+  });
   bHave.addEventListener("click", function () {
     setQ("쓰고 싶은 이야기를 한 줄로 적어 보세요.", false);
     setHint("예: 작년에 친했던 친구와 멀어진 일 / 처음으로 혼자 버스를 타고 간 날");
@@ -1029,10 +1194,12 @@ why(x) + "</div>";
   bSkip.addEventListener("click", function () { if (!bSkip.disabled) { commit(); nextStory(); } });
   bStuck.addEventListener("click", function () { if (!bStuck.disabled) stuck(); });
   bBack.addEventListener("click", function () { toDraft(); });
+  bPause.addEventListener("click", function () { work.draft = draft.value.trim(); pause(); });
+  bResume2.addEventListener("click", function () { toDraft(); });
   bSift.addEventListener("click", sift);
   bPrint.addEventListener("click", function () { try { window.print(); } catch (e) {} });
   bCopy.addEventListener("click", function () {
-    var t = fullText();
+    var t = phase === "pause" ? pauseText() : fullText();
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(t).then(function () { flash("복사했습니다."); },
         function () { flash("복사하지 못했습니다. 글을 길게 눌러 직접 복사해 주세요."); });
@@ -1040,7 +1207,7 @@ why(x) + "</div>";
   });
   bSave.addEventListener("click", function () {
     try {
-      var b = new Blob([fullText()], { type: "text/plain;charset=utf-8" });
+      var b = new Blob([phase === "pause" ? pauseText() : fullText()], { type: "text/plain;charset=utf-8" });
       var u = URL.createObjectURL(b), a = document.createElement("a");
       a.href = u; a.download = title().replace(/[\\/:*?"<>|]/g, "") + ".txt";
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
@@ -1055,7 +1222,11 @@ why(x) + "</div>";
   });
   function tickCount() {
     var n = draft.value.replace(/\s/g, "").length;
-    countN.textContent = n + "자" + (n < 150 ? "" : n < 400 ? "  ·  한 장면이 되어 갑니다" : "  ·  충분합니다");
+    countN.textContent = n + "자" + (
+      n < 80  ? "" :
+      n < 160 ? "  ·  한 문단이 되어 갑니다" :
+      n < 320 ? "  ·  한 문단을 채웠습니다" :
+                "  ·  충분합니다. 더 써도 좋아요");
   }
   help.addEventListener("change", function (e) {
     var t = e.target && e.target.getAttribute ? e.target.getAttribute("data-tick") : null;
@@ -1067,6 +1238,8 @@ why(x) + "</div>";
   });
   [fo, fs, fr].forEach(function (el) { el.addEventListener("input", hideErr); });
   nowEl.addEventListener("input", function () { work.now = nowEl.value; save(); });
+  pGood.addEventListener("input", function () { work.pGood = pGood.value; save(); });
+  pMore.addEventListener("input", function () { work.pMore = pMore.value; save(); });
   answer.addEventListener("keydown", function (e) {
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); submit(); }
   });
@@ -1112,6 +1285,8 @@ why(x) + "</div>";
       setQ("그 일을 영화로 찍는다면, 딱 한 장면만 남긴다면 어느 순간을 남기겠어요?", false);
       setHint("경험 전체를 쓰면 줄거리 요약이 됩니다. 영화로 치면 한 컷만 남기는 일입니다.");
       answer.value = ""; focus(answer); return; }
+    if (p === "pause") return pause();
+    if (p === "carry") return carryIn();
     if (p === "seedline") return seedline();
     if (p === "sift") return sift();
     if (p === "deepen" && cur) { phase = "deepen"; badge.className = "badge";
@@ -1144,7 +1319,7 @@ why(x) + "</div>";
         resume.hidden = false;
       }
     }
-    drawEx(); setMode(); pingAI(); gather();
+    drawEx(); setMode(); pingAI(); start();
   }
   boot(false);
 })();
