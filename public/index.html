@@ -404,15 +404,15 @@
         <textarea id="cName" rows="1" placeholder="예: 서현"></textarea>
       </div>
       <div class="fbox">
-        <label for="cOpen">들머리</label>
+        <label for="cOpen">들머리 <span style="font-weight:400;color:var(--ink-mute)">— 처음 상황</span></label>
         <textarea id="cOpen" rows="2" placeholder="평소에 늘 하던 일 하나"></textarea>
       </div>
       <div class="fbox">
-        <label for="cShake">흔들림</label>
+        <label for="cShake">흔들림 <span style="font-weight:400;color:var(--ink-mute)">— 달라진 순간</span></label>
         <textarea id="cShake" rows="2" placeholder="무언가 어긋나는 순간"></textarea>
       </div>
       <div class="fbox">
-        <label for="cRest">남는 것</label>
+        <label for="cRest">남는 것 <span style="font-weight:400;color:var(--ink-mute)">— 마지막 행동</span></label>
         <textarea id="cRest" rows="2" placeholder="달라진 나를 보여주는 행동 하나"></textarea>
       </div>
     </div>
@@ -424,17 +424,17 @@
 
     <div id="pFrame" hidden>
       <div class="fbox">
-        <label for="fo">들머리</label>
+        <label for="fo">들머리 <span style="font-weight:400;color:var(--ink-mute)">— 처음 상황</span></label>
         <p class="fh">아직 아무 일도 안 일어난 상태. 평소에 늘 하던 일 하나.</p>
         <textarea id="fo" rows="2" placeholder="예: 점심마다 교실 뒷문에서 친구를 기다린다"></textarea>
       </div>
       <div class="fbox">
-        <label for="fs">흔들림</label>
+        <label for="fs">흔들림 <span style="font-weight:400;color:var(--ink-mute)">— 달라진 순간</span></label>
         <p class="fh">무언가 어긋나는 순간. 말 한 줄이나 작은 행동이면 충분합니다.</p>
         <textarea id="fs" rows="2" placeholder="예: 그날은 친구가 먼저 가 버린다"></textarea>
       </div>
       <div class="fbox">
-        <label for="fr">남는 것</label>
+        <label for="fr">남는 것 <span style="font-weight:400;color:var(--ink-mute)">— 마지막 행동</span></label>
         <p class="fh">끝. '깨달았다'로 쓰지 않습니다. 달라진 나를 보여주는 행동 하나로 끝냅니다.</p>
         <textarea id="fr" rows="2" placeholder="예: 혼자 일어나 국을 다시 떠 온다"></textarea>
       </div>
@@ -494,7 +494,7 @@
       <button class="ghost" id="bStuck" type="button" hidden>막혔어요</button>
       <button class="ghost" id="bBack" type="button" hidden>더 고치러 가기</button>
       <button class="ghost" id="bPause" type="button" hidden>오늘은 여기까지</button>
-      <button class="ghost" id="bResume2" type="button" hidden>이어서 쓰러 가기</button>
+      <button class="ghost" id="bResume2" type="button" hidden>초고 쓰러 가기</button>
       <button class="ghost" id="bCopy" type="button" hidden>복사하기</button>
       <button class="ghost" id="bSave" type="button" hidden>파일로 받기</button>
       <button class="ghost" id="bPrint" type="button" hidden>인쇄</button>
@@ -548,7 +548,7 @@ var API_BASE = "/api";
     "조금 더 사소한 것부터 가 볼까요. 작은 일일수록 오히려 쓰기 좋습니다."
   ];
   var BEATS = [
-    { k: "scene", l: "그때 그 장면", ask: "그때를 한 장면처럼 — 어디였고 곁에 누가 있었는지",
+    { k: "scene", l: "그때 그 장면", first: true, ask: "그때를 한 장면처럼 — 어디였고 곁에 누가 있었는지",
       f: "그때를 한 장면처럼 떠올려 볼게요. 어디였고, 곁에 누가 있었나요?" },
     { k: "before", l: "그 전의 나", ask: "그 일이 있기 전의 나는 그 일에 대해 어떻게 생각하거나 행동하고 있었는지",
       f: "그 일이 있기 전의 나는, 그 일에 대해 어떻게 생각하고 있었나요?" },
@@ -577,6 +577,15 @@ why(x) + "</div>";
   function why(x) { return '<span class="ar">→</span><span class="ex">' + esc(x[1]) + "</span>"; }
 
   var HELP = {
+    gather: function () {
+      return "<h4>이런 평범한 일도 소설이 됩니다</h4>" +
+        '<div class="pair"><span class="no">친구가 급식실에서 내 앞에 안 앉았다</span>' +
+        '<span class="ar">→</span><span class="ex">늘 앉던 자리가 빈 채로 있던 그날 점심</span></div>' +
+        '<div class="pair"><span class="no">버스를 잘못 탔다</span>' +
+        '<span class="ar">→</span><span class="ex">낯선 정류장에 혼자 내려 지도를 켰던 저녁</span></div>' +
+        '<p class="tip">큰 사건이 아니어도 됩니다. <b>그때 내 마음이 조금 움직였다면</b> 그걸로 충분합니다. 실제와 달라져도 괜찮아요. 소설이니까요.</p>';
+    },
+    deepen: function () { return HELP.gather(); },
     seedline: function () {
       return "<h4>이런 식으로 적으면 됩니다</h4><ul>" +
         '<li class="ex">혼자 있는 게 꼭 나쁜 건 아니라는 것</li>' +
@@ -597,15 +606,15 @@ why(x) + "</div>";
     },
     frame: function () {
       return "<h4>이렇게 세우면 됩니다</h4><ul>" +
-        '<li><b>들머리</b> <span class="ex">점심마다 교실 뒷문에서 친구를 기다린다</span></li>' +
-        '<li><b>흔들림</b> <span class="ex">그날은 친구가 먼저 “먼저 갈게” 하고 나간다</span></li>' +
-        '<li><b>남는 것</b> <span class="ex">혼자 일어나 국을 다시 떠 온다</span></li></ul>' +
+        '<li><b>들머리(처음 상황)</b> <span class="ex">점심마다 교실 뒷문에서 친구를 기다린다</span></li>' +
+        '<li><b>흔들림(달라진 순간)</b> <span class="ex">그날은 친구가 먼저 “먼저 갈게” 하고 나간다</span></li>' +
+        '<li><b>남는 것(마지막 행동)</b> <span class="ex">혼자 일어나 국을 다시 떠 온다</span></li></ul>' +
         '<p class="tip">‘남는 것’에 <b>깨달았다</b>를 쓰지 마세요. 행동 하나면 충분합니다.</p>';
     },
     draft: function () {
       var f = work.frame || { open: "", shake: "", rest: "" };
       var ck = work.ticks || {};
-      var mine = [["open", "들머리", f.open], ["shake", "흔들림", f.shake], ["rest", "남는 것", f.rest]]
+      var mine = [["open", "들머리 · 처음 상황", f.open], ["shake", "흔들림 · 달라진 순간", f.shake], ["rest", "남는 것 · 마지막 행동", f.rest]]
         .map(function (r) {
           var on = ck[r[0]] ? " on" : "";
           return '<li class="' + on.trim() + '"><input type="checkbox" data-tick="' + r[0] + '"' +
@@ -783,7 +792,7 @@ why(x) + "</div>";
     badge.className = "badge"; badge.textContent = "오늘 수업";
     panel("start"); btns({ noNext: true });
     setQ("오늘은 어디서부터 할까요?", false);
-    setHint("처음이면 위에서, 뼈대를 이미 만들어 뒀다면 아래에서 시작하세요.");
+    setHint("특별한 일이 없어도 괜찮습니다. 아주 사소한 일로도 소설이 됩니다. 실제 있었던 일을 조금 바꾸거나 상상으로 채워도 돼요.");
     hideErr(); drawCarry(); drawRail(); drawHelp(); drawDots(0);
     foot.textContent = "답한 내용은 이 기기에만 저장됩니다. 창을 닫아도 이어서 쓸 수 있습니다.";
     save();
@@ -801,7 +810,7 @@ why(x) + "</div>";
   function gather() {
     phase = "gather"; beat = 0; cur = null;
     badge.className = "badge"; badge.textContent = "함께 찾아볼까요";
-    panel("ask"); btns({ dunno: true, have: seeds.length === 0, next: "이 이야기로" });
+    panel("ask"); btns({ dunno: true, next: "이 이야기로" });
     answer.value = ""; answer.placeholder = "떠오르는 대로 편하게 적어 보세요. 짧아도 괜찮아요.";
     hideErr(); setHint(null); drawTrail(); drawDots(0); drawCarry(); drawRail();
     setQ(OPENERS[openIdx].q, false); drawHelp();
@@ -817,7 +826,7 @@ why(x) + "</div>";
     var b = BEATS[beat];
     drawDots(beat + 1); answer.value = ""; hideErr(); drawTrail();
     setQ("", true); lock(true);
-    ask("deepen", { story: cur, beat: b.ask }).then(function (q) {
+    ask("deepen", { story: cur, beat: b.ask, first: !!b.first }).then(function (q) {
       setQ(q || b.f, false); lock(false); focus(answer); save();
     });
   }
@@ -955,7 +964,7 @@ why(x) + "</div>";
     badge.className = "badge"; badge.textContent = "초고 쓰기";
     panel("draft"); btns({ stuck: true, pause: true, next: "다 썼어요" });
     setQ("이제 " + (work.name || "주인공") + "의 장면을 써 보세요.", false);
-    setHint("오늘 목표는 한 문단입니다. 길게 쓰지 않아도 됩니다. 감정을 직접 말하는 대신 행동과 사물로 보여주면 글이 살아납니다. 막히면 아래 '막혔어요'를 누르세요. 문장을 대신 써 주지는 않고, 질문을 하나 드립니다.");
+    setHint("오늘 목표는 한 문단, 다섯에서 여덟 문장입니다. 처음에는 네 문장만 써도 괜찮아요. 감정을 직접 말하는 대신 행동과 사물로 보여주면 글이 살아납니다. 막히면 아래 '막혔어요'를 누르세요. 문장을 대신 써 주지는 않고, 질문을 하나 드립니다.");
     hideErr(); drawCarry(); drawRail();
     foot.textContent = "여기서부터 끝까지, 문장은 전부 여러분이 씁니다.";
     drawHelp(); tickCount(); focus(draft); save();
@@ -1222,11 +1231,12 @@ why(x) + "</div>";
   });
   function tickCount() {
     var n = draft.value.replace(/\s/g, "").length;
-    countN.textContent = n + "자" + (
-      n < 80  ? "" :
-      n < 160 ? "  ·  한 문단이 되어 갑니다" :
-      n < 320 ? "  ·  한 문단을 채웠습니다" :
-                "  ·  충분합니다. 더 써도 좋아요");
+    var sent = (draft.value.match(/[.!?。]|다\s*\n|다$/g) || []).length;
+    countN.textContent = n + "자" + (sent ? " · " + sent + "문장" : "") + (
+      n < 60  ? "" :
+      sent < 4 ? "  ·  네 문장만 되어도 됩니다" :
+      sent < 8 ? "  ·  한 문단이 되어 갑니다" :
+                 "  ·  충분합니다. 더 써도 좋아요");
   }
   help.addEventListener("change", function (e) {
     var t = e.target && e.target.getAttribute ? e.target.getAttribute("data-tick") : null;
